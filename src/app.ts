@@ -4,6 +4,8 @@ import axios from 'axios'
 import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
 
+const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
+
 config()
 
 const server = fastify()
@@ -28,5 +30,16 @@ server.post('/new-message', async (req, res) => {
     const chatId = message?.chat?.id
     if (!messageText || !chatId) {
         return res.code(400)
+    }
+
+    try {
+        await axios.post(TELEGRAM_URI, {
+            chat_id: chatId,
+            text: `ты написал ${messageText}`
+        })
+        res.send('Done')
+    } catch (e) {
+        console.log(e)
+        res.send(e)
     }
 })
