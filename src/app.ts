@@ -4,6 +4,8 @@ import axios from 'axios'
 import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
 import * as process from "process";
+// @ts-ignore
+import {findFilm} from "./services/kinopoisk.ts";
 
 config()
 
@@ -27,13 +29,18 @@ server.post('/new-message', async (req, res) => {
     // @ts-ignore
     const { message } = req.body
 
-    console.log('req.body', req.body)
-
     const messageText = message?.text?.toLowerCase()?.trim()
     const chatId = message?.chat?.id
     if (!messageText || !chatId) {
         return res.code(400)
     }
+
+    let films = await findFilm(messageText).docs.map((film:any) => {
+        const {name, id} = film
+        return {id, name}
+    })
+
+    console.log('films', films)
 
     try {
         await axios.post(TELEGRAM_URI, {
