@@ -26,6 +26,8 @@ server.post('/new-message', async (req, res) => {
     // @ts-ignore
     const { message } = req.body
 
+    console.log('req.body', req.body)
+
     const messageText = message?.text?.toLowerCase()?.trim()
     const chatId = message?.chat?.id
     if (!messageText || !chatId) {
