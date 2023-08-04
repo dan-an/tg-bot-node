@@ -43,3 +43,13 @@ server.post('/new-message', async (req, res) => {
         res.send(e)
     }
 })
+
+const start = async () => {
+    try {
+        await server.listen({ port: 3000 });
+        console.log("Server is listening at port 3000")
+    } catch (err) {
+        console.log(err)
+    }
+};
+start();
