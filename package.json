@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "fastify": "^4.21.0",
-    "google-auth-library": "^9.0.0",
+    "google-auth-library": "^8.8.0",
     "google-spreadsheet": "^4.0.2"
   }
 }
