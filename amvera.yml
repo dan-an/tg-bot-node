@@ -6,4 +6,3 @@ meta:
 
 run:
   command: npm run dev
-  containerPort: 3000
