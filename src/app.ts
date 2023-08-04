@@ -3,6 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet'
 import axios from 'axios'
 import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
+import * as process from "process";
 
 const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
 
@@ -48,8 +49,8 @@ server.post('/new-message', async (req, res) => {
 
 const start = async () => {
     try {
-        await server.listen({ port: 80 });
-        console.log("Server is listening at port 3000")
+        await server.listen({ port: parseInt(process.env.PORT!) });
+        console.log(`Server is listening at port ${process.env.PORT}`)
     } catch (err) {
         console.log(err)
     }
