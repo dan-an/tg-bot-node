@@ -5,9 +5,9 @@ import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
 import * as process from "process";
 
-const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
-
 config()
+
+const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
 
 const server = fastify()
 
