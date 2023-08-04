@@ -49,7 +49,7 @@ server.post('/new-message', async (req, res) => {
 
 const start = async () => {
     try {
-        await server.listen({ port: parseInt(process.env.PORT!) });
+        await server.listen({ port: parseInt(process.env.PORT!), host: '0.0.0.0' });
         console.log(`Server is listening at port ${process.env.PORT}`)
     } catch (err) {
         console.log(err)
