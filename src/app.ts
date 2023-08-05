@@ -25,6 +25,8 @@ const serviceAccountAuth = new JWT({
 
 const doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, serviceAccountAuth)
 
+const messageText = 'человек паук'
+
 server.post('/new-message', async (req, res) => {
     // @ts-ignore
     const { message } = req.body
@@ -35,22 +37,30 @@ server.post('/new-message', async (req, res) => {
         return res.code(400)
     }
 
-    let films = await findFilm(messageText).docs.map((film:any) => {
-        const {name, id} = film
-        return {id, name}
-    })
+    let films = await findFilm(messageText)
 
-    console.log('films', films)
+    const formattedFilmList = films.map((film: any, index: number) => {
+        const {name, rating, year, shortDescription} = film
+        return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${shortDescription}`
+    }).join('\n\n')
+
+    const replyText = `<b>Нашлось ${films.length} фильмов:</b>\n\n${formattedFilmList}`
+
+    const inlineKeyboardMarkup = {
+        inline_keyboard: films.map((film: any, index: number) => {
+            return [{text: index + 1, callback_data: film.id}]
+        })
+    }
 
     try {
         await axios.post(TELEGRAM_URI, {
-            chat_id: chatId,
-            text: `${films}`
+            parse_mode: "HTML",
+            chat_id: 277244759,
+            text: replyText,
+            reply_markup: JSON.stringify(inlineKeyboardMarkup)
         })
-        res.send('Done')
     } catch (e) {
         console.log(e)
-        res.send(e)
     }
 })
 

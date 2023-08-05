@@ -13,5 +13,5 @@ export async function findFilm(title: string): Promise<any> {
 
     const response = await axios.get(`https://api.kinopoisk.dev/v1.3/movie?page=1&limit=10&name=${title}`, config)
 
-    return response.data
+    return response.data.docs
 }
