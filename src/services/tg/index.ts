@@ -3,12 +3,16 @@ import {findFilm} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError, userRequests} from "../../types/index.ts";
+import {HttpError, userRequests, messageData} from "../../types/index.ts";
 import * as process from "process";
 
 config()
 
 const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
+
+const sendMessage = async (message: messageData): Promise<void> => {
+    await axios.post(TELEGRAM_URI, message)
+}
 
 const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> => {
     let films = await findFilm(filmName)
@@ -27,12 +31,14 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     }
 
     try {
-        await axios.post(TELEGRAM_URI, {
+        const message: messageData = {
             parse_mode: "HTML",
             chat_id: chatId,
             text: replyText,
             reply_markup: JSON.stringify(inlineKeyboardMarkup)
-        })
+        }
+
+        await sendMessage(message)
     } catch (e) {
         console.log(e)
     }
