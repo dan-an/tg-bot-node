@@ -40,15 +40,16 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     return
 }
 const handleNewMessage = async (message: any) => {
-    // const messageMeta = message.entities[0]
+    const messageMeta = message.entities ? message.entities[0] : null
 
-    // if (messageMeta.type !== "bot_command" ||
-    //     messageMeta.type !== 'mention' &&
-    //     message?.text?.toLowerCase()?.trim() !== process.env.TELEGRAM_BOT_NAME ||
-    //     message.reply_to_message &&
-    // ) {
-    //     return
-    // }
+    if ( !messageMeta && messageMeta.type !== "bot_command" ||
+        (messageMeta.type !== 'mention' &&
+        !message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME)) ||
+        (message.reply_to_message &&
+        message.reply_to_message.from.username.toLowerCase()?.trim() !== process.env.TELEGRAM_BOT_NAME)
+    ) {
+        return
+    }
 
     const messageText = message?.text?.toLowerCase()?.trim()
     const chatId = message?.chat?.id
