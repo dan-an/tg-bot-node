@@ -40,7 +40,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     return
 }
 const handleNewMessage = async (message: any) => {
-    const messageMeta = message.entities[0]
+    // const messageMeta = message.entities[0]
 
     // if (messageMeta.type !== "bot_command" ||
     //     messageMeta.type !== 'mention' &&
