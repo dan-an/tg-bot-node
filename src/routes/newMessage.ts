@@ -1,7 +1,7 @@
 import {FastifyInstance, FastifyPluginAsync} from "fastify";
 import fp from 'fastify-plugin';
 // @ts-ignore
-import handleNewMessage from "../services/tg.ts";
+import handleNewMessage from "../services/tg/index.ts";
 // @ts-ignore
 import {HttpError} from "../types/index.ts";
 

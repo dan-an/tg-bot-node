@@ -1,9 +1,10 @@
 // @ts-ignore
-import {findFilm} from "../services/kinopoisk.ts";
+import {findFilm} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError} from "../types/index.ts";
+import {HttpError} from "../../types";
+import * as process from "process";
 
 config()
 
@@ -29,7 +30,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
         await axios.post(TELEGRAM_URI, {
             parse_mode: "HTML",
             chat_id: chatId,
-            text: replyText,
+            text: "привет",
             reply_markup: JSON.stringify(inlineKeyboardMarkup)
         })
     } catch (e) {
@@ -39,6 +40,16 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     return
 }
 const handleNewMessage = async (message: any) => {
+    const messageMeta = message.entities[0]
+
+    // if (messageMeta.type !== "bot_command" ||
+    //     messageMeta.type !== 'mention' &&
+    //     message?.text?.toLowerCase()?.trim() !== process.env.TELEGRAM_BOT_NAME ||
+    //     message.reply_to_message &&
+    // ) {
+    //     return
+    // }
+
     const messageText = message?.text?.toLowerCase()?.trim()
     const chatId = message?.chat?.id
     if (!messageText || !chatId) {
