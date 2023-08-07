@@ -55,7 +55,7 @@ server.post('/new-message', async (req, res) => {
     try {
         await axios.post(TELEGRAM_URI, {
             parse_mode: "HTML",
-            chat_id: 277244759,
+            chat_id: chatId,
             text: replyText,
             reply_markup: JSON.stringify(inlineKeyboardMarkup)
         })
