@@ -44,7 +44,7 @@ const handleNewMessage = async (message: any) => {
 
     const messageMeta = message.entities ? message.entities[0] : null
 
-    if ( messageMeta && messageMeta.type === "bot_command" ||
+    if ( !!messageMeta && messageMeta.type === "bot_command" ||
         (messageMeta.type === 'mention' &&
         message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME)) ||
         (message.reply_to_message &&
