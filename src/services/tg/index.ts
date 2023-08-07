@@ -3,7 +3,7 @@ import {findFilm} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError} from "../../types/index.ts";
+import {HttpError, userRequests} from "../../types/index.ts";
 import * as process from "process";
 
 config()
@@ -56,7 +56,9 @@ const handleNewMessage = async (message: any) => {
             throw new HttpError('No message text or chat id', 400)
         }
 
-        await handleSaveFilm(messageText, chatId)
+        if(userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
+            await handleSaveFilm(messageText, chatId)
+        }
     }
 }
 export default handleNewMessage
