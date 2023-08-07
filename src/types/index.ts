@@ -6,10 +6,13 @@ export class HttpError extends Error {
     }
 }
 
-interface PhraseConfig {
+export interface PhraseConfig {
     [key: string]: string[]
 }
 
-export const userRequests: PhraseConfig = {
-    save: ['запомни фильм', 'save']
+export interface messageData {
+    text: string;
+    char_id: string;
+    parse_mode?: string;
+    reply_markup?: string;
 }
