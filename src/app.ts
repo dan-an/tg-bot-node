@@ -5,7 +5,8 @@ import { JWT } from 'google-auth-library'
 import * as process from "process";
 // @ts-ignore
 import {findFilm} from "./services/kinopoisk.ts";
-import NewMessage from "@/routes/newMessage";
+// @ts-ignore
+import NewMessage from "./routes/newMessage.ts";
 
 config()
 

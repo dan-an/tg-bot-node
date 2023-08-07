@@ -1,4 +1,5 @@
-import {findFilm} from "@/services/kinopoisk";
+// @ts-ignore
+import {findFilm} from "./services/kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 
