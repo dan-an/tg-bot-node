@@ -8,14 +8,9 @@ import {HttpError} from "../types/index.ts";
 config()
 
 const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
-const handleNewMessage = async (message: any) => {
-    const messageText = message?.text?.toLowerCase()?.trim()
-    const chatId = message?.chat?.id
-    if (!messageText || !chatId) {
-        throw new HttpError('No message text or chat id', 400)
-    }
 
-    let films = await findFilm(messageText)
+const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> => {
+    let films = await findFilm(filmName)
 
     const formattedFilmList = films.map((film: any, index: number) => {
         const {name, rating, year, shortDescription} = film
@@ -40,5 +35,18 @@ const handleNewMessage = async (message: any) => {
     } catch (e) {
         console.log(e)
     }
+
+    return
+}
+const handleNewMessage = async (message: any) => {
+    const messageText = message?.text?.toLowerCase()?.trim()
+    const chatId = message?.chat?.id
+    if (!messageText || !chatId) {
+        throw new HttpError('No message text or chat id', 400)
+    }
+
+    console.log('message', message)
+
+    await handleSaveFilm(messageText, chatId)
 }
 export default handleNewMessage
