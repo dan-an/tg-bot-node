@@ -3,10 +3,10 @@ node_modules
 /dist
 
 # local env files
+.env
 .env.local
 .env.*.local
 .env.compose
-../../../working_projects/monitor/.env
 
 # Log files
 npm-debug.log*

@@ -2,7 +2,6 @@ import fastify from "fastify";
 import { GoogleSpreadsheet } from 'google-spreadsheet'
 import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
-import * as process from "process";
 // @ts-ignore
 import {findFilm} from "./services/kinopoisk.ts";
 // @ts-ignore
