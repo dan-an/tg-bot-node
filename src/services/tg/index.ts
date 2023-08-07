@@ -3,8 +3,10 @@ import {findFilm} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError, userRequests, messageData} from "../../types/index.ts";
+import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
+// @ts-ignore
+import {userRequests} from "./dictionary.ts";
 
 config()
 
