@@ -30,7 +30,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
         await axios.post(TELEGRAM_URI, {
             parse_mode: "HTML",
             chat_id: chatId,
-            text: "привет",
+            text: replyText,
             reply_markup: JSON.stringify(inlineKeyboardMarkup)
         })
     } catch (e) {
@@ -48,8 +48,6 @@ const handleNewMessage = async (message: any) => {
         messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
     const isReplyToBot = message.reply_to_message && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
 
-    console.log('hasNeededMeta', hasNeededMeta)
-    console.log('isReplyToBot', isReplyToBot)
 
     if ( hasNeededMeta || isReplyToBot) {
         const messageText = message?.text?.toLowerCase()?.trim()
