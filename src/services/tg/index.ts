@@ -45,7 +45,7 @@ const handleNewMessage = async (message: any) => {
     const messageMeta = message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
         messageMeta.type === "bot_command" ||
-        messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
+        messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME)
     const isReplyToBot = message.reply_to_message && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
 
     console.log('!!message.reply_to_message', !!message.reply_to_message)
