@@ -1,6 +1,9 @@
 import {FastifyInstance, FastifyPluginAsync} from "fastify";
 import fp from 'fastify-plugin';
-import handleNewMessage from "@/services/tg";
+// @ts-ignore
+import handleNewMessage from "../services/tg.ts";
+// @ts-ignore
+import {HttpError} from "../types/index.ts";
 
 const NewMessage: FastifyPluginAsync = async (server: FastifyInstance)=> {
     server.post('/new-message', async (request, reply) => {
