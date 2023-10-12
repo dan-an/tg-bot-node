@@ -9,6 +9,7 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance)=> {
     server.post('/new-message', async (request, reply) => {
         // @ts-ignore
         const { message } = request.body
+        console.log('request.body', request.body)
 
         try {
             await handleNewMessage(message)
