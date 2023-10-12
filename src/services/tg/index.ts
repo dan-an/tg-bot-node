@@ -1,5 +1,5 @@
 // @ts-ignore
-import {findFilm} from "../kinopoisk.ts";
+import {findFilmByName, findFilmByID} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
@@ -17,7 +17,7 @@ const sendMessage = async (message: messageData): Promise<void> => {
 }
 
 const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> => {
-    let films = await findFilm(filmName)
+    let films = await findFilmByName(filmName)
 
     const formattedFilmList = films.map((film: any, index: number) => {
         const {name, rating, year, shortDescription} = film
@@ -28,7 +28,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 
     const inlineKeyboardMarkup = {
         inline_keyboard: films.map((film: any, index: number) => {
-            return [{text: index + 1, callback_data: film.id}]
+            return [{text: index + 1, callback_data: {filmId: film.id}}]
         })
     }
 
@@ -47,7 +47,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 
     return
 }
-const handleNewMessage = async (message: any) => {
+export const handleNewMessage = async (message: any) => {
     console.log('message', message)
 
     const messageMeta = message && message.entities ? message.entities[0] : null
@@ -77,4 +77,12 @@ const handleNewMessage = async (message: any) => {
         await handleSaveFilm(messageText, chatId)
     }
 }
-export default handleNewMessage
+
+export const handleCallbackQuery = async (message: any) => {
+    console.log(message.data)
+
+    if (message.data.filmId) {
+        const film = findFilmByID(message.data.filmId)
+        console.log('film', film)
+    }
+}

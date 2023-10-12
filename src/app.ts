@@ -3,7 +3,7 @@ import { GoogleSpreadsheet } from 'google-spreadsheet'
 import { config } from 'dotenv'
 import { JWT } from 'google-auth-library'
 // @ts-ignore
-import {findFilm} from "./services/kinopoisk.ts";
+import {findFilmByName} from "./services/kinopoisk.ts";
 // @ts-ignore
 import NewMessage from "./routes/newMessage.ts";
 
