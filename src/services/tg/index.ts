@@ -64,8 +64,17 @@ const handleNewMessage = async (message: any) => {
             throw new HttpError('No message text or chat id', 400)
         }
 
-        if(userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
-            await handleSaveFilm(messageText, chatId)
+        if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
+            if (isReplyToBot) {
+                await handleSaveFilm(messageText, chatId)
+            } else {
+                const message: messageData = {
+                    chat_id: chatId,
+                    text: 'Диктуй',
+                }
+
+                await sendMessage(message)
+            }
         }
     }
 }
