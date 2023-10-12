@@ -1,7 +1,7 @@
 import {FastifyInstance, FastifyPluginAsync} from "fastify";
 import fp from 'fastify-plugin';
 // @ts-ignore
-import { handleNewMessage } from "../services/tg/index.ts";
+import { handleNewMessage, handleCallbackQuery } from "../services/tg/index.ts";
 // @ts-ignore
 import { HttpError } from "../types/index.ts";
 // @ts-ignore
@@ -14,10 +14,10 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
 
         try {
             logIncome(request.body)
-            if (message) {
+            if (!!message) {
                 await handleNewMessage(message)
-            } else if (callback_query) {
-
+            } else if (!!callback_query) {
+                await handleCallbackQuery (callback_query)
             }
         } catch (e) {
             console.log(e)
