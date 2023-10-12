@@ -50,7 +50,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 const handleNewMessage = async (message: any) => {
     console.log('message', message)
 
-    const messageMeta = message.entities ? message.entities[0] : null
+    const messageMeta = message && message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
         (messageMeta.type === "bot_command" ||
             messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
