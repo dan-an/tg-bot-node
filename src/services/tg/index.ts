@@ -53,29 +53,28 @@ const handleNewMessage = async (message: any) => {
     const messageMeta = message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
         (messageMeta.type === "bot_command" ||
-        messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
+            messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
     const isReplyToBot = message.reply_to_message && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
 
 
-    if ( hasNeededMeta || isReplyToBot) {
-        const messageText = message?.text?.toLowerCase()?.trim()
-        const chatId = message?.chat?.id
-        if (!messageText || !chatId) {
-            throw new HttpError('No message text or chat id', 400)
-        }
+    const messageText = message?.text?.toLowerCase()?.trim()
+    const chatId = message?.chat?.id
 
+    if (!messageText || !chatId) {
+        throw new HttpError('No message text or chat id', 400)
+    }
+
+    if (hasNeededMeta) {
         if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
-            if (isReplyToBot) {
-                await handleSaveFilm(messageText, chatId)
-            } else {
-                const message: messageData = {
-                    chat_id: chatId,
-                    text: 'Диктуй',
-                }
-
-                await sendMessage(message)
+            const message: messageData = {
+                chat_id: chatId,
+                text: 'Диктуй',
             }
+
+            await sendMessage(message)
         }
+    } else if (isReplyToBot) {
+        await handleSaveFilm(messageText, chatId)
     }
 }
 export default handleNewMessage
