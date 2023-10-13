@@ -28,6 +28,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 
     const inlineKeyboardMarkup = {
         inline_keyboard: films.map((film: any, index: number) => {
+            console.log(film.id)
             return [{text: index + 1, callback_data: film.id}]
         })
     }
