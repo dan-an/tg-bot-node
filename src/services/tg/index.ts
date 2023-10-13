@@ -83,7 +83,7 @@ export const handleCallbackQuery = async (message: any) => {
     console.log(message.data)
 
     if (message.data) {
-        const film = findFilmByID(message.data)
+        const film = await findFilmByID(message.data)
         console.log('film', film)
     }
 }
