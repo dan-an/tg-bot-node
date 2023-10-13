@@ -80,7 +80,7 @@ export const handleNewMessage = async (message: any) => {
 }
 
 export const handleCallbackQuery = async (message: any) => {
-    console.log(message.data)
+    console.log("handleCallbackQuery", message.data)
 
     if (message.data) {
         const film = await findFilmByID(message.data)
