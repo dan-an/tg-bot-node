@@ -28,7 +28,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 
     const inlineKeyboardMarkup = {
         inline_keyboard: films.map((film: any, index: number) => {
-            return [{text: index + 1, callback_data: {filmId: film.id}}]
+            return [{text: index + 1, callback_data: film.id}]
         })
     }
 
@@ -81,8 +81,8 @@ export const handleNewMessage = async (message: any) => {
 export const handleCallbackQuery = async (message: any) => {
     console.log(message.data)
 
-    if (message.data.filmId) {
-        const film = findFilmByID(message.data.filmId)
+    if (message.data) {
+        const film = findFilmByID(message.data)
         console.log('film', film)
     }
 }
