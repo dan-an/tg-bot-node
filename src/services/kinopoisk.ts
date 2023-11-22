@@ -21,5 +21,5 @@ export async function findFilmByID (id: string): Promise<any> {
     const response = await axios.get(`https://api.kinopoisk.dev/v1.3/movie/${id}`, options)
     console.log('response', response)
 
-    return response.data.docs
+    return response.data
 }
