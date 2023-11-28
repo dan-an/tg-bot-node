@@ -7,7 +7,7 @@ import {findFilmByName} from "./services/kinopoisk.ts";
 // @ts-ignore
 import NewMessage from "./routes/newMessage.ts";
 // @ts-ignore
-import { GoogleInstance } from "./google/index.ts";
+import { GoogleInstance } from "./services/google/index.ts";
 
 config()
 

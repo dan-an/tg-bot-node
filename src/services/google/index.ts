@@ -6,7 +6,7 @@ config()
 
 export class GoogleInstance {
     private serviceAccountAuth: JWT = new JWT();
-    private doc: GoogleSpreadsheet = null as unknown as GoogleSpreadsheet
+    private doc: GoogleSpreadsheet = null as unknown as GoogleSpreadsheet;
     async init() {
         console.log('init')
         this.serviceAccountAuth = new JWT({
@@ -21,7 +21,7 @@ export class GoogleInstance {
         await this.doc.loadInfo()
     }
 
-    static async addRow(title: string, link: string, id: string) {
+    async addRow(title: string, link: string, id: string) {
         const filmList = this.doc.sheetsById[parseInt(process.env.FILMS_SHEET_ID!)]
         await filmList.addRow({'название': title, "ссылка": link, "id": id})
     }
