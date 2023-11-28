@@ -6,12 +6,17 @@ import { JWT } from 'google-auth-library'
 import {findFilmByName} from "./services/kinopoisk.ts";
 // @ts-ignore
 import NewMessage from "./routes/newMessage.ts";
+// @ts-ignore
+import { GoogleInstance } from "./google/index.ts";
 
 config()
 
 const server = fastify()
 
 console.log('started')
+
+//Initialize google client
+await GoogleInstance.create()
 
 // Register routes
 server.register(NewMessage)
