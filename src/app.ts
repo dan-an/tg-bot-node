@@ -11,10 +11,10 @@ config()
 
 const server = fastify()
 
-console.log('started after public add row')
+console.log('started after google call refactored')
 
 //Initialize google client
-await GoogleInstance.create()
+export const googleInstance = await GoogleInstance.create()
 
 // Register routes
 server.register(NewMessage)
