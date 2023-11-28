@@ -13,7 +13,7 @@ config()
 
 const server = fastify()
 
-console.log('started')
+console.log('started1')
 
 //Initialize google client
 await GoogleInstance.create()
