@@ -7,7 +7,8 @@ import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
 // @ts-ignore
 import {userRequests} from "./dictionary.ts";
-import {GoogleInstance} from "@/services/google";
+// @ts-ignore
+import {GoogleInstance} from "../google/index.ts";
 
 config()
 
