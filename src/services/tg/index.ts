@@ -49,8 +49,6 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     return
 }
 export const handleNewMessage = async (message: any) => {
-    console.log('message', message)
-
     const messageMeta = message && message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
         (messageMeta.type === "bot_command" ||
@@ -80,10 +78,7 @@ export const handleNewMessage = async (message: any) => {
 }
 
 export const handleCallbackQuery = async (message: any) => {
-    console.log("handleCallbackQuery", message.data)
-
     if (message.data) {
         const film = await findFilmByID(message.data)
-        console.log('film', film)
     }
 }
