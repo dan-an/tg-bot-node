@@ -13,16 +13,6 @@ const server = fastify()
 
 console.log('started')
 
-const serviceAccountAuth = new JWT({
-    email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-    key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
-    scopes: [
-        'https://www.googleapis.com/auth/spreadsheets',
-    ],
-});
-
-const doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, serviceAccountAuth)
-
 // Register routes
 server.register(NewMessage)
 
