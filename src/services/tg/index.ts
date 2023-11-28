@@ -8,7 +8,7 @@ import * as process from "process";
 // @ts-ignore
 import {userRequests} from "./dictionary.ts";
 // @ts-ignore
-import {GoogleInstance} from "../google/index.ts";
+import {googleInstance} from "../../app.ts";
 
 config()
 
@@ -82,6 +82,6 @@ export const handleNewMessage = async (message: any) => {
 export const handleCallbackQuery = async (message: any) => {
     if (message.data) {
         const film = await findFilmByID(message.data)
-        await GoogleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
+        await googleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
     }
 }
