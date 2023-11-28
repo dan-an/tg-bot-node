@@ -11,7 +11,7 @@ config()
 
 const server = fastify()
 
-console.log('started after branch update')
+console.log('started after public add row')
 
 //Initialize google client
 await GoogleInstance.create()

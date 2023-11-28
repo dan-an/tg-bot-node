@@ -21,7 +21,8 @@ export class GoogleInstance {
         await this.doc.loadInfo()
     }
 
-    async addRow(title: string, link: string, id: string) {
+    public async addRow(title: string, link: string, id: string) {
+        console.log('addRow')
         const filmList = this.doc.sheetsById[parseInt(process.env.FILMS_SHEET_ID!)]
         await filmList.addRow({'название': title, "ссылка": link, "id": id})
     }
