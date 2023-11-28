@@ -11,7 +11,7 @@ config()
 
 const server = fastify()
 
-console.log('started1')
+console.log('started after branch update')
 
 //Initialize google client
 await GoogleInstance.create()
