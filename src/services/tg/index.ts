@@ -7,6 +7,7 @@ import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
 // @ts-ignore
 import {userRequests} from "./dictionary.ts";
+import {GoogleInstance} from "@/services/google";
 
 config()
 
@@ -80,5 +81,6 @@ export const handleNewMessage = async (message: any) => {
 export const handleCallbackQuery = async (message: any) => {
     if (message.data) {
         const film = await findFilmByID(message.data)
+        await GoogleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
     }
 }
