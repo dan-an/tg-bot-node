@@ -11,7 +11,7 @@ config()
 
 const server = fastify()
 
-console.log('started after logging added')
+console.log('started after group logging added')
 
 //Initialize google client
 export const googleInstance = await GoogleInstance.create()
