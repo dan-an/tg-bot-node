@@ -78,13 +78,13 @@ export const handleNewMessage = async (message: any) => {
     }
 }
 
-export const handleCallbackQuery = async (message: any) => {
+export const handleCallbackQuery = async (payload: any) => {
+    const {message} = payload
+
     const chatId = message?.chat?.id
 
-    console.log(message)
-
-    if (message.data) {
-        const film = await findFilmByID(message.data)
+    if (payload.data) {
+        const film = await findFilmByID(payload.data)
         await googleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
 
         const reply: messageData = {
