@@ -11,7 +11,7 @@ config()
 
 const server = fastify()
 
-console.log('started after reply added')
+console.log('started after refactored reply')
 
 //Initialize google client
 export const googleInstance = await GoogleInstance.create()
