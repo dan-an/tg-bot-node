@@ -62,21 +62,19 @@ export const handleNewMessage = async (message: any) => {
     const messageText = message?.text?.toLowerCase()?.trim()
     const chatId = message?.chat?.id
 
-    if (!messageText || !chatId) {
-        throw new HttpError('No message text or chat id', 400)
-    }
+    if (messageText && chatId) {
+        if (hasNeededMeta) {
+            if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
+                const message: messageData = {
+                    chat_id: chatId,
+                    text: 'Диктуй',
+                }
 
-    if (hasNeededMeta) {
-        if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
-            const message: messageData = {
-                chat_id: chatId,
-                text: 'Диктуй',
+                await sendMessage(message)
             }
-
-            await sendMessage(message)
+        } else if (isReplyToBot) {
+            await handleSaveFilm(messageText, chatId)
         }
-    } else if (isReplyToBot) {
-        await handleSaveFilm(messageText, chatId)
     }
 }
 
