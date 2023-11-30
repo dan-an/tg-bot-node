@@ -4,8 +4,6 @@ import fp from 'fastify-plugin';
 import { handleNewMessage, handleCallbackQuery } from "../services/tg/index.ts";
 // @ts-ignore
 import { HttpError } from "../types/index.ts";
-// @ts-ignore
-import logIncome from "../services/tg/logger.ts";
 
 const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
     server.post('/new-message', async (request, reply) => {
@@ -13,7 +11,6 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
         const {message, callback_query} = request.body
 
         try {
-            logIncome(request.body)
             if (!!message) {
                 await handleNewMessage(message)
             } else if (!!callback_query) {

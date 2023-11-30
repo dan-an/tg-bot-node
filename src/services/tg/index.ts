@@ -22,15 +22,14 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
     let films = await findFilmByName(filmName)
 
     const formattedFilmList = films.map((film: any, index: number) => {
-        const {name, rating, year, shortDescription} = film
-        return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${shortDescription}`
+        const {name, rating, year, description} = film
+        return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${description}`
     }).join('\n\n')
 
     const replyText = `<b>Нашлось ${films.length} фильмов:</b>\n\n${formattedFilmList}`
 
     const inlineKeyboardMarkup = {
         inline_keyboard: films.map((film: any, index: number) => {
-            console.log(film.id)
             return [{text: index + 1, callback_data: film.id}]
         })
     }
@@ -80,8 +79,19 @@ export const handleNewMessage = async (message: any) => {
 }
 
 export const handleCallbackQuery = async (message: any) => {
+    const chatId = message?.chat?.id
+
+    console.log(message)
+
     if (message.data) {
         const film = await findFilmByID(message.data)
         await googleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
+
+        const reply: messageData = {
+            chat_id: chatId,
+            text: `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`,
+        }
+
+        await sendMessage(reply)
     }
 }
