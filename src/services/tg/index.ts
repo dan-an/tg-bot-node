@@ -6,7 +6,7 @@ import {config} from "dotenv";
 import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
 // @ts-ignore
-import {userRequests} from "./dictionary.ts";
+import {botReplies, userRequests, hashtags} from "./dictionary.ts";
 // @ts-ignore
 import {googleInstance} from "../../app.ts";
 
@@ -18,7 +18,7 @@ const sendMessage = async (message: messageData): Promise<void> => {
     await axios.post(TELEGRAM_URI, message)
 }
 
-const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> => {
+const handleSaveFilm = async (filmName: string, chatId: string): Promise<void> => {
     let films = await findFilmByName(filmName)
 
     const formattedFilmList = films.map((film: any, index: number) => {
@@ -49,6 +49,18 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<any> =>
 
     return
 }
+
+const getRandomPhrase = (phraseList: string[]): string => {
+    return phraseList[Math.floor(Math.random() * phraseList.length)]
+}
+
+const getHashtag = (messageText: string): string => {
+    const regex = /#(.+)/;
+    const match = messageText.match(regex);
+
+    return match![1]
+}
+
 export const handleNewMessage = async (message: any) => {
     const messageMeta = message && message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
@@ -63,15 +75,39 @@ export const handleNewMessage = async (message: any) => {
     if (messageText && chatId) {
         if (hasNeededMeta) {
             if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
-                const message: messageData = {
+                const reply: messageData = {
                     chat_id: chatId,
-                    text: 'Диктуй',
+                    text: `#${hashtags.FILMS}\n${getRandomPhrase(botReplies.forceUser)}`,
+                    parse_mode: "HTML",
                 }
 
-                await sendMessage(message)
+                await sendMessage(reply)
+            }
+            if (userRequests.shoplist.some((keyWord: string) => messageText.includes(keyWord))) {
+                const reply: messageData = {
+                    chat_id: chatId,
+                    text: `#${hashtags.SHOPPING}\n${getRandomPhrase(botReplies.forceUser)}`,
+                    parse_mode: "HTML",
+                }
+
+                await sendMessage(reply)
             }
         } else if (isReplyToBot) {
-            await handleSaveFilm(messageText, chatId)
+            const hashtag = getHashtag(message.reply_to_message.text)
+
+            switch (hashtag) {
+                case hashtags.FILMS:
+                    await handleSaveFilm(messageText, chatId)
+                case hashtags.SHOPPING:
+                    await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [messageText])
+
+                    const reply: messageData = {
+                        chat_id: chatId,
+                        text: `Записала сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`,
+                    }
+
+                    await sendMessage(reply)
+            }
         }
     }
 }
@@ -83,7 +119,7 @@ export const handleCallbackQuery = async (payload: any) => {
 
     if (payload.data) {
         const film = await findFilmByID(payload.data)
-        await googleInstance.addRow(film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id)
+        await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id])
 
         const reply: messageData = {
             chat_id: chatId,
