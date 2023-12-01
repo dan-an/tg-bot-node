@@ -10,8 +10,6 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
         // @ts-ignore
         const {message, callback_query} = request.body
 
-        console.log('request.body', request.body)
-
         try {
             if (!!message) {
                 await handleNewMessage(message)
