@@ -186,7 +186,7 @@ export const handleCallbackQuery = async (payload: any) => {
 
         switch (activeHashtag) {
             case hashtags.FILMS:
-                const film = await findFilmByID(payload.data)
+                const film = await findFilmByID(parsedPayload.data)
                 await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id])
 
                 reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`
