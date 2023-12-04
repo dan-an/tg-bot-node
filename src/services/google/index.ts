@@ -26,6 +26,11 @@ export class GoogleInstance {
         await worksheet.addRow(values)
     }
 
+    public async addRows(worksheetId: number, values: string[][]) {
+        const worksheet = this.doc.sheetsById[worksheetId]
+        await worksheet.addRows(values)
+    }
+
     public async getRows(worksheetId: number, column: string = "Категория", filterValue: string = 'продукты') {
         const worksheet = this.doc.sheetsById[worksheetId]
         const rows = await worksheet.getRows()
