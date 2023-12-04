@@ -15,7 +15,7 @@ config()
 const TELEGRAM_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}`
 
 let activeHashtag = ''
-let shoppingItem = ''
+let shoppingList: string[] = []
 let filterColumn = ''
 let filterValue = ''
 
@@ -36,7 +36,7 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<void> =
 
     const inlineKeyboardMarkup = {
         inline_keyboard: films.map((film: any, index: number) => {
-            return [{text: index + 1, callback_data: film.id}]
+            return [{text: index + 1, callback_data: JSON.stringify({data: film.id})}]
         })
     }
 
@@ -137,7 +137,7 @@ export const handleNewMessage = async (message: any) => {
                     await handleSaveFilm(messageText, chatId)
                     break
                 case hashtags.SHOPPING:
-                    shoppingItem = messageText
+                    shoppingList = messageText.split('\n')
 
                     keyboard = {
                         inline_keyboard: (Object.values(categories) as string[]).reduce<{
@@ -182,6 +182,8 @@ export const handleCallbackQuery = async (payload: any) => {
             parse_mode: "HTML",
         }
 
+        const parsedPayload = JSON.parse(payload.data)
+
         switch (activeHashtag) {
             case hashtags.FILMS:
                 const film = await findFilmByID(payload.data)
@@ -191,15 +193,15 @@ export const handleCallbackQuery = async (payload: any) => {
 
                 break
             case hashtags.SHOPPING:
-                await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [shoppingItem, payload.data])
-                shoppingItem = ''
+                const rows: string[][] = shoppingList.map(item => [item, parsedPayload.data])
+
+                await googleInstance.addRows(parseInt(process.env.SHOPPING_SHEET_ID!), rows)
+                shoppingList = []
 
                 reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`
 
                 break
             case hashtags.GETLIST:
-                const parsedPayload = JSON.parse(payload.data)
-
                 if (parsedPayload.type) {
                     switch (parsedPayload.type) {
                         case "filterColumn":
