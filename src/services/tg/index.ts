@@ -22,8 +22,9 @@ const handleSaveFilm = async (filmName: string, chatId: string): Promise<void> =
     let films = await findFilmByName(filmName)
 
     const formattedFilmList = films.map((film: any, index: number) => {
-        const {name, rating, year, description} = film
-        return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${description}`
+        const {name, rating, year, shortDescription, id} = film
+        const kpLink = `https://www.kinopoisk.ru/film/${id}`
+        return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${shortDescription ? shortDescription : kpLink}`
     }).join('\n\n')
 
     const replyText = `<b>Нашлось ${films.length} фильмов:</b>\n\n${formattedFilmList}`
@@ -98,6 +99,7 @@ export const handleNewMessage = async (message: any) => {
             switch (hashtag) {
                 case hashtags.FILMS:
                     await handleSaveFilm(messageText, chatId)
+                    break
                 case hashtags.SHOPPING:
                     await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [messageText])
 
@@ -107,6 +109,7 @@ export const handleNewMessage = async (message: any) => {
                     }
 
                     await sendMessage(reply)
+                    break
             }
         }
     }
