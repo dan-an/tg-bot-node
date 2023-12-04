@@ -6,19 +6,21 @@ import {config} from "dotenv";
 import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
 // @ts-ignore
-import {botReplies, userRequests, hashtags, categories} from "./dictionary.ts";
+import {botReplies, userRequests, hashtags, categories, filters, columns} from "./dictionary.ts";
 // @ts-ignore
 import {googleInstance} from "../../app.ts";
 
 config()
 
-const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
+const TELEGRAM_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}`
 
 let activeHashtag = ''
 let shoppingItem = ''
+let filterColumn = ''
+let filterValue = ''
 
 const sendMessage = async (message: messageData): Promise<void> => {
-    await axios.post(TELEGRAM_URI, message)
+    await axios.post(`${TELEGRAM_URL}/sendMessage`, message)
 }
 
 const handleSaveFilm = async (filmName: string, chatId: string): Promise<void> => {
@@ -78,23 +80,57 @@ export const handleNewMessage = async (message: any) => {
 
     if (messageText && chatId) {
         if (hasNeededMeta) {
+            const reply: messageData = {
+                chat_id: chatId,
+            }
+
             if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
                 activeHashtag = hashtags.FILMS
+                reply.text = `#${activeHashtag}\n${getRandomPhrase(botReplies.forceUser)}`
             }
             if (userRequests.shoplist.some((keyWord: string) => messageText.includes(keyWord))) {
                 activeHashtag = hashtags.SHOPPING
+                reply.text = `#${activeHashtag}\n${getRandomPhrase(botReplies.forceUser)}`
+            }
+            if (userRequests.getList.some((keyWord: string) => messageText.includes(keyWord))) {
+                activeHashtag = hashtags.GETLIST
+
+                const keyboard = {
+                    inline_keyboard: (Object.entries(filters) as string[][]).reduce<{
+                        text: string, callback_data: string
+                    }[][]>((keyboard, column: string[]) => {
+                        if (!keyboard.length || keyboard.at(-1)!.length === 2) {
+                            keyboard.push([])
+                        }
+
+                        if (keyboard.at(-1)!.length < 2) {
+                            keyboard.at(-1)!.push({
+                                text: column[1],
+                                callback_data: JSON.stringify({
+                                    type: "filterColumn",
+                                    data: column[1] !== filters.NONE ? column[0] : ''
+                                })
+                            })
+                        }
+
+                        return keyboard
+                    }, []),
+                }
+
+                reply.text = botReplies.askFilter[0]
+                reply.reply_markup = JSON.stringify(keyboard)
             }
 
-            const reply: messageData = {
-                chat_id: chatId,
-                text: `#${activeHashtag}\n${getRandomPhrase(botReplies.forceUser)}`,
-                parse_mode: "HTML",
-            }
+            reply.parse_mode = "HTML"
 
             await sendMessage(reply)
-
         } else if (isReplyToBot) {
             activeHashtag = getHashtag(message.reply_to_message.text)
+            const reply: messageData = {
+                chat_id: chatId,
+            }
+
+            let keyboard = {}
 
             switch (activeHashtag) {
                 case hashtags.FILMS:
@@ -102,7 +138,8 @@ export const handleNewMessage = async (message: any) => {
                     break
                 case hashtags.SHOPPING:
                     shoppingItem = messageText
-                    const keyboard = {
+
+                    keyboard = {
                         inline_keyboard: (Object.values(categories) as string[]).reduce<{
                             text: string, callback_data: string
                         }[][]>((keyboard, category: string) => {
@@ -111,20 +148,22 @@ export const handleNewMessage = async (message: any) => {
                             }
 
                             if (keyboard.at(-1)!.length < 2) {
-                                keyboard.at(-1)!.push({text: category, callback_data: category})
+                                keyboard.at(-1)!.push({
+                                    text: category,
+                                    callback_data: JSON.stringify({type: "filterValue", data: category})
+                                })
                             }
 
                             return keyboard
                         }, []),
                     }
 
-                    const reply: messageData = {
-                        chat_id: chatId,
-                        text: botReplies.askCategory[0],
-                        reply_markup: JSON.stringify(keyboard)
-                    }
+                    reply.text = botReplies.askCategory[0]
+                    reply.reply_markup = JSON.stringify(keyboard)
 
                     await sendMessage(reply)
+                    break
+                case hashtags.GETLIST:
                     break
             }
         }
@@ -140,6 +179,7 @@ export const handleCallbackQuery = async (payload: any) => {
         const reply: messageData = {
             chat_id: chatId,
             text: '',
+            parse_mode: "HTML",
         }
 
         switch (activeHashtag) {
@@ -149,8 +189,6 @@ export const handleCallbackQuery = async (payload: any) => {
 
                 reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`
 
-                await sendMessage(reply)
-
                 break
             case hashtags.SHOPPING:
                 await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [shoppingItem, payload.data])
@@ -158,9 +196,57 @@ export const handleCallbackQuery = async (payload: any) => {
 
                 reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`
 
-                await sendMessage(reply)
+                break
+            case hashtags.GETLIST:
+                const parsedPayload = JSON.parse(payload.data)
+
+                if (parsedPayload.type) {
+                    switch (parsedPayload.type) {
+                        case "filterColumn":
+                            filterColumn = parsedPayload.data ? filters[parsedPayload.data] : ""
+
+                            if (!filterColumn) {
+                                break
+                            }
+
+                            reply.text = 'Отлично, что выберем?'
+                            reply.reply_markup = {
+                                inline_keyboard: (Object.values(categories) as string[]).reduce<{
+                                    text: string, callback_data: string
+                                }[][]>((keyboard, category: string) => {
+                                    if (!keyboard.length || keyboard.at(-1)!.length === 2) {
+                                        keyboard.push([])
+                                    }
+
+                                    if (keyboard.at(-1)!.length < 2) {
+                                        keyboard.at(-1)!.push({
+                                            text: category, callback_data: JSON.stringify({
+                                                type: 'filterValue',
+                                                data: category
+                                            })
+                                        })
+                                    }
+
+                                    return keyboard
+                                }, []),
+                            }
+                            await sendMessage(reply)
+                            return
+                        case "filterValue":
+                            filterValue = parsedPayload.data
+                    }
+                }
+                const shopItems = await googleInstance.getRows(process.env.SHOPPING_SHEET_ID, filterColumn, filterValue)
+
+                const formattedList = shopItems.map((item: any) => {
+                    return `    - ${item[columns.NAME]}`
+                })
+
+                reply.text = `<b>Надо купить: </b>\n${formattedList.join('\n')}`
 
                 break
         }
+
+        await sendMessage(reply)
     }
 }

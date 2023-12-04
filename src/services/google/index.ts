@@ -1,4 +1,4 @@
-import {GoogleSpreadsheet} from "google-spreadsheet";
+import {GoogleSpreadsheet, GoogleSpreadsheetRow} from "google-spreadsheet";
 import {config} from "dotenv";
 import {JWT} from "google-auth-library";
 import {googleInstance} from "@/app";
@@ -24,6 +24,20 @@ export class GoogleInstance {
     public async addRow(worksheetId: number, values: string[]) {
         const worksheet = this.doc.sheetsById[worksheetId]
         await worksheet.addRow(values)
+    }
+
+    public async getRows(worksheetId: number, column: string = "Категория", filterValue: string = 'продукты') {
+        const worksheet = this.doc.sheetsById[worksheetId]
+        const rows = await worksheet.getRows()
+        const formattedRows = rows.map(row => row.toObject())
+        let filteredRows = JSON.parse(JSON.stringify(formattedRows))
+        if (column && filterValue) {
+            filteredRows = formattedRows.filter(row => row[column] === filterValue)
+        }
+
+        // console.log('filteredRows', filteredRows)
+
+        return filteredRows
     }
 
     static async create() {
