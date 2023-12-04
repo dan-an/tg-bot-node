@@ -6,13 +6,16 @@ import {config} from "dotenv";
 import {HttpError, messageData} from "../../types/index.ts";
 import * as process from "process";
 // @ts-ignore
-import {botReplies, userRequests, hashtags} from "./dictionary.ts";
+import {botReplies, userRequests, hashtags, categories} from "./dictionary.ts";
 // @ts-ignore
 import {googleInstance} from "../../app.ts";
 
 config()
 
 const TELEGRAM_URI = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}/sendMessage`
+
+let activeHashtag = ''
+let shoppingItem = ''
 
 const sendMessage = async (message: messageData): Promise<void> => {
     await axios.post(TELEGRAM_URI, message)
@@ -76,36 +79,49 @@ export const handleNewMessage = async (message: any) => {
     if (messageText && chatId) {
         if (hasNeededMeta) {
             if (userRequests.save.some((keyWord: string) => messageText.includes(keyWord))) {
-                const reply: messageData = {
-                    chat_id: chatId,
-                    text: `#${hashtags.FILMS}\n${getRandomPhrase(botReplies.forceUser)}`,
-                    parse_mode: "HTML",
-                }
-
-                await sendMessage(reply)
+                activeHashtag = hashtags.FILMS
             }
             if (userRequests.shoplist.some((keyWord: string) => messageText.includes(keyWord))) {
-                const reply: messageData = {
-                    chat_id: chatId,
-                    text: `#${hashtags.SHOPPING}\n${getRandomPhrase(botReplies.forceUser)}`,
-                    parse_mode: "HTML",
-                }
-
-                await sendMessage(reply)
+                activeHashtag = hashtags.SHOPPING
             }
-        } else if (isReplyToBot) {
-            const hashtag = getHashtag(message.reply_to_message.text)
 
-            switch (hashtag) {
+            const reply: messageData = {
+                chat_id: chatId,
+                text: `#${activeHashtag}\n${getRandomPhrase(botReplies.forceUser)}`,
+                parse_mode: "HTML",
+            }
+
+            await sendMessage(reply)
+
+        } else if (isReplyToBot) {
+            activeHashtag = getHashtag(message.reply_to_message.text)
+
+            switch (activeHashtag) {
                 case hashtags.FILMS:
                     await handleSaveFilm(messageText, chatId)
                     break
                 case hashtags.SHOPPING:
-                    await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [messageText])
+                    shoppingItem = messageText
+                    const keyboard = {
+                        inline_keyboard: (Object.values(categories) as string[]).reduce<{
+                            text: string, callback_data: string
+                        }[][]>((keyboard, category: string) => {
+                            if (!keyboard.length || keyboard.at(-1)!.length === 2) {
+                                keyboard.push([])
+                            }
+
+                            if (keyboard.at(-1)!.length < 2) {
+                                keyboard.at(-1)!.push({text: category, callback_data: category})
+                            }
+
+                            return keyboard
+                        }, []),
+                    }
 
                     const reply: messageData = {
                         chat_id: chatId,
-                        text: `Записала сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`,
+                        text: botReplies.askCategory[0],
+                        reply_markup: JSON.stringify(keyboard)
                     }
 
                     await sendMessage(reply)
@@ -121,14 +137,30 @@ export const handleCallbackQuery = async (payload: any) => {
     const chatId = message?.chat?.id
 
     if (payload.data) {
-        const film = await findFilmByID(payload.data)
-        await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id])
-
         const reply: messageData = {
             chat_id: chatId,
-            text: `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`,
+            text: '',
         }
 
-        await sendMessage(reply)
+        switch (activeHashtag) {
+            case hashtags.FILMS:
+                const film = await findFilmByID(payload.data)
+                await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id])
+
+                reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`
+
+                await sendMessage(reply)
+
+                break
+            case hashtags.SHOPPING:
+                await googleInstance.addRow(parseInt(process.env.SHOPPING_SHEET_ID!), [shoppingItem, payload.data])
+                shoppingItem = ''
+
+                reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`
+
+                await sendMessage(reply)
+
+                break
+        }
     }
 }
