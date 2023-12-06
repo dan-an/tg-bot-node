@@ -3,7 +3,9 @@ import fp from 'fastify-plugin';
 // @ts-ignore
 import { handleNewMessage, handleCallbackQuery } from "../services/tg/index.ts";
 // @ts-ignore
-import { HttpError } from "../types/index.ts";
+import {HttpError, TelegramBot} from "../types/index.ts";
+// @ts-ignore
+import {telegramControllerInstance} from "../app.ts";
 
 const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
     server.post('/new-message', async (request, reply) => {
@@ -12,9 +14,9 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
 
         try {
             if (!!message) {
-                await handleNewMessage(message)
+                await telegramControllerInstance.handleNewMessage(message)
             } else if (!!callback_query) {
-                await handleCallbackQuery (callback_query)
+                await telegramControllerInstance.handleCallbackQuery(callback_query)
             }
         } catch (e) {
             console.log(e)
