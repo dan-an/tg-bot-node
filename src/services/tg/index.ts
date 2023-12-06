@@ -68,6 +68,7 @@ const getHashtag = (messageText: string): string => {
 }
 
 export const handleNewMessage = async (message: any) => {
+    console.log('message', message)
     const messageMeta = message && message.entities ? message.entities[0] : null
     const hasNeededMeta = !!messageMeta &&
         (messageMeta.type === "bot_command" ||
