@@ -11,7 +11,7 @@ config()
 
 const server = fastify()
 
-console.log('started after test update')
+console.log('started after message log')
 
 //Initialize google client
 export const googleInstance = await GoogleInstance.create()
