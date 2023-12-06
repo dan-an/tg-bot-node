@@ -6,6 +6,8 @@ import {findFilmByName} from "./services/kinopoisk.ts";
 import NewMessage from "./routes/newMessage.ts";
 // @ts-ignore
 import { GoogleInstance } from "./services/google/index.ts";
+// @ts-ignore
+import {TelegramController} from "./services/tg/index.ts";
 
 config()
 
@@ -15,6 +17,8 @@ console.log('started after test update')
 
 //Initialize google client
 export const googleInstance = await GoogleInstance.create()
+
+export const telegramControllerInstance = new TelegramController()
 
 // Register routes
 server.register(NewMessage)
