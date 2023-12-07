@@ -49,7 +49,7 @@ export class TelegramController {
         this.hasNeededMeta = !!this.messageMeta &&
             (this.messageMeta.type === "bot_command" ||
                 this.messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
-        this.isReplyToBot = message.reply_to_message && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
+        this.isReplyToBot = message.reply_to_message && message.reply_to_message.from.username && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
 
 
         const messageText = message?.text?.toLowerCase()?.trim()
