@@ -71,7 +71,7 @@ export class SaveFilmDialog extends EventEmitter {
 
         const replyText = `<b>Нашлось ${films.length} фильмов:</b>\n\n${formattedFilmList}`
 
-        const inlineKeyboardMarkup = {
+        const keyboard: TelegramBot.InlineKeyboardMarkup = {
             inline_keyboard: films.map((film: any, index: number) => {
                 return [{text: index + 1, callback_data: JSON.stringify({data: film.id})}]
             })
@@ -82,7 +82,7 @@ export class SaveFilmDialog extends EventEmitter {
                 parse_mode: "HTML",
                 chat_id: chatId,
                 text: replyText,
-                reply_markup: JSON.stringify(inlineKeyboardMarkup)
+                reply_markup: JSON.stringify(keyboard)
             }
 
             await sendMessage(message)

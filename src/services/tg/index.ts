@@ -3,18 +3,19 @@ import {findFilmByID, findFilmByName} from "../kinopoisk.ts";
 import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError, messageData, TelegramBot} from "../../types/index.ts";
-import * as process from "process";
+import {HttpError, TelegramBot} from "../../types/index.ts";
 // @ts-ignore
 import {botReplies, categories, columns, filters, hashtags, userRequests} from "./dictionary.ts";
 // @ts-ignore
 import {googleInstance} from "../../app.ts";
 // @ts-ignore
 import {SaveFilmDialog} from "./dialogs/saveFilmDialog.ts";
+// @ts-ignore
+import {ShoppingDialog} from "./dialogs/shoppingDialog.ts";
 
 config()
 
-const dialogs = {SaveFilmDialog}
+const dialogs = {SaveFilmDialog, ShoppingDialog}
 
 export class TelegramController {
     telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}`
@@ -94,48 +95,48 @@ export class TelegramController {
                 // await this.sendMessage(reply)
             }
             // else if (this.isReplyToBot) {
-                // await this.activeDialog.handleNewMessage(message)
-                // this.activeHashtag = this.getHashtag(message.reply_to_message.text)
-                // const reply: messageData = {
-                //     chat_id: chatId,
-                // }
-                //
-                // let keyboard = {}
-                //
-                // switch (this.activeHashtag) {
-                //     case hashtags.FILMS:
-                //         //saveFilmDialog here
-                //         break
-                //     case hashtags.SHOPPING:
-                //         this.shoppingList = messageText.split('\n')
-                //
-                //         keyboard = {
-                //             inline_keyboard: (Object.values(categories) as string[]).reduce<{
-                //                 text: string, callback_data: string
-                //             }[][]>((keyboard, category: string) => {
-                //                 if (!keyboard.length || keyboard.at(-1)!.length === 2) {
-                //                     keyboard.push([])
-                //                 }
-                //
-                //                 if (keyboard.at(-1)!.length < 2) {
-                //                     keyboard.at(-1)!.push({
-                //                         text: category,
-                //                         callback_data: JSON.stringify({type: "filterValue", data: category})
-                //                     })
-                //                 }
-                //
-                //                 return keyboard
-                //             }, []),
-                //         }
-                //
-                //         reply.text = botReplies.askCategory[0]
-                //         reply.reply_markup = JSON.stringify(keyboard)
-                //
-                //         await this.sendMessage(reply)
-                //         break
-                //     case hashtags.GETLIST:
-                //         break
-                // }
+            // await this.activeDialog.handleNewMessage(message)
+            // this.activeHashtag = this.getHashtag(message.reply_to_message.text)
+            // const reply: messageData = {
+            //     chat_id: chatId,
+            // }
+            //
+            // let keyboard = {}
+            //
+            // switch (this.activeHashtag) {
+            //     case hashtags.FILMS:
+            //         //saveFilmDialog here
+            //         break
+            //     case hashtags.SHOPPING:
+            //         this.shoppingList = messageText.split('\n')
+            //
+            //         keyboard = {
+            //             inline_keyboard: (Object.values(categories) as string[]).reduce<{
+            //                 text: string, callback_data: string
+            //             }[][]>((keyboard, category: string) => {
+            //                 if (!keyboard.length || keyboard.at(-1)!.length === 2) {
+            //                     keyboard.push([])
+            //                 }
+            //
+            //                 if (keyboard.at(-1)!.length < 2) {
+            //                     keyboard.at(-1)!.push({
+            //                         text: category,
+            //                         callback_data: JSON.stringify({type: "filterValue", data: category})
+            //                     })
+            //                 }
+            //
+            //                 return keyboard
+            //             }, []),
+            //         }
+            //
+            //         reply.text = botReplies.askCategory[0]
+            //         reply.reply_markup = JSON.stringify(keyboard)
+            //
+            //         await this.sendMessage(reply)
+            //         break
+            //     case hashtags.GETLIST:
+            //         break
+            // }
             // }
         }
     }
