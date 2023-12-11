@@ -142,7 +142,7 @@ export class TelegramController {
 
     public async handleCallbackQuery(payload: TelegramBot.CallbackQuery) {
         if (this.activeDialog) {
-            this.activeDialog.handleCallbackQuery(payload)
+            await this.activeDialog.handleCallbackQuery(payload)
         }
 
         // const {message} = payload
@@ -250,5 +250,8 @@ export class TelegramController {
         const key = Object.keys(dialogs).filter(key => key.toLowerCase().includes(dialogName))[0]
         // @ts-ignore
         this.activeDialog = new dialogs[key]()
+        this.activeDialog.on('dialog is over', () => {
+            this.activeDialog = null
+        })
     }
 }
