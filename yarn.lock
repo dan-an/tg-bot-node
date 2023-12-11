@@ -1874,6 +1874,11 @@
   "resolved" "https://registry.npmjs.org/prelude-ls/-/prelude-ls-1.2.1.tgz"
   "version" "1.2.1"
 
+"prettier@^3.1.0":
+  "integrity" "sha512-TQLvXjq5IAibjh8EpBIkNKxO749UEWABoiIZehEPiY4GNpVdhaFKqSTu+QrlU6D2dPAfubRmtJTi4K4YkQ5eXw=="
+  "resolved" "https://registry.npmjs.org/prettier/-/prettier-3.1.0.tgz"
+  "version" "3.1.0"
+
 "process-warning@^2.0.0", "process-warning@^2.2.0":
   "integrity" "sha512-/1WZ8+VQjR6avWOgHeEPd7SDQmFQ1B5mC1eRXsCm5TarlNmx/wCsa5GEaxGm05BORRtyG/Ex/3xq3TuRvq57qg=="
   "resolved" "https://registry.npmjs.org/process-warning/-/process-warning-2.2.0.tgz"

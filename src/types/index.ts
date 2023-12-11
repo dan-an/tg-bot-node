@@ -1004,7 +1004,7 @@ export namespace TelegramBot {
         message_id: number;
     }
 
-    type ChatId = number | string;
+    export type ChatId = number | string;
 
     interface BotCommandScopeDefault {
         type: "default";
