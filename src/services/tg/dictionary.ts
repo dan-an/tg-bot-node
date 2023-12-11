@@ -18,7 +18,9 @@ export enum categories {
     CLOTHES = "одежда",
     CHEMISTRY = "бытовая химия",
     CAR = "в машину",
-    OTHER = "другое"
+    CATS = "для котов",
+    MEDS = "лекарства",
+    OTHER = "другое",
 }
 
 export enum columns {
