@@ -8,12 +8,13 @@ import {TelegramBot} from "../../types/index.ts";
 import {getRandomPhrase, sendMessage} from "../tools.ts";
 // @ts-ignore
 import {findFilmByID, findFilmByName} from "../../../services/kinopoisk.ts";
+import { EventEmitter } from "events"
 import {config} from "dotenv";
 
 
 config()
 
-export class SaveFilmDialog {
+export class SaveFilmDialog extends EventEmitter {
     chatId = ''
     isReplyToBot = false
 
@@ -55,6 +56,7 @@ export class SaveFilmDialog {
             reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`
 
             await sendMessage(reply)
+            this.emit('dialog is over')
         }
     }
 
