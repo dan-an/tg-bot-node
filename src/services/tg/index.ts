@@ -1,9 +1,8 @@
 // @ts-ignore
 import {findFilmByID, findFilmByName} from "../kinopoisk.ts";
-import axios from "axios";
 import {config} from "dotenv";
 // @ts-ignore
-import {HttpError, TelegramBot} from "../../types/index.ts";
+import {TelegramBot} from "../../types/index.ts";
 // @ts-ignore
 import {botReplies, categories, columns, filters, hashtags, userRequests} from "./dictionary.ts";
 // @ts-ignore
