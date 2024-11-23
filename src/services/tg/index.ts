@@ -1,35 +1,38 @@
-// @ts-ignore
-import {findFilmByID, findFilmByName} from "../kinopoisk.ts";
 import {config} from "dotenv";
-// @ts-ignore
-import {TelegramBot} from "../../types/index.ts";
-// @ts-ignore
-import {botReplies, categories, columns, filters, hashtags, userRequests} from "./dictionary.ts";
-// @ts-ignore
-import {googleInstance} from "../../app.ts";
-// @ts-ignore
-import {SaveFilmDialog} from "./dialogs/saveFilmDialog.ts";
-// @ts-ignore
-import {ShoppingDialog} from "./dialogs/shoppingDialog.ts";
-// @ts-ignore
-import {WhatToBuyDialog} from "./dialogs/whatToBuyDialog.ts";
+import {TelegramBot} from "@/types/telegram";
+import {SaveFilmDialog} from "@/services/tg/dialogs/saveFilmDialog"
+import {ShoppingDialog} from "@/services/tg/dialogs/shoppingDialog";
+import {WhatToBuyDialog} from "@/services/tg/dialogs/whatToBuyDialog";
 
 config()
 
-const dialogs = {SaveFilmDialog, ShoppingDialog, WhatToBuyDialog}
+type DialogInstance = {
+    handleNewMessage: (message: TelegramBot.Message) => Promise<void>;
+    handleCallbackQuery?: (payload: TelegramBot.CallbackQuery) => Promise<void>;
+    on: (event: string, callback: () => void) => void;
+};
+
+const dialogs: Record<string, new () => DialogInstance> = {
+    SaveFilmDialog,
+    ShoppingDialog,
+    WhatToBuyDialog,
+};
 
 export class TelegramController {
     hasNeededMeta = false
-    messageMeta: TelegramBot.Message = null
+    messageMeta: TelegramBot.MessageEntity | null = null;
     isReplyToBot = false
     activeDialog: any = null
 
     public async handleNewMessage(message: TelegramBot.Message) {
         this.messageMeta = message && message.entities ? message.entities[0] : null
-        this.hasNeededMeta = !!this.messageMeta &&
+        this.hasNeededMeta =
+            !!this.messageMeta &&
             (this.messageMeta.type === "bot_command" ||
-                this.messageMeta.type === 'mention' && message?.text?.toLowerCase()?.trim().includes(process.env.TELEGRAM_BOT_NAME))
-        this.isReplyToBot = message.reply_to_message && message.reply_to_message.from.username && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
+                (this.messageMeta.type === "mention" &&
+                    !!message?.text?.toLowerCase()?.trim()?.includes(process.env.TELEGRAM_BOT_NAME!)));
+        this.isReplyToBot =
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
         const messageText = message?.text?.toLowerCase()?.trim()
         const chatId = message?.chat?.id

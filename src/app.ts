@@ -1,19 +1,12 @@
 import fastify from "fastify";
 import { config } from 'dotenv'
-// @ts-ignore
-import {findFilmByName} from "./services/kinopoisk.ts";
-// @ts-ignore
-import NewMessage from "./routes/newMessage.ts";
-// @ts-ignore
-import { GoogleInstance } from "./services/google/index.ts";
-// @ts-ignore
-import {TelegramController} from "./services/tg/index.ts";
+import NewMessage from "@/routes/newMessage";
+import { GoogleInstance } from "@/services/google";
+import { TelegramController } from "@/services/tg";
 
 config()
 
 const server = fastify()
-
-console.log('started after message log')
 
 //Initialize google client
 export const googleInstance = await GoogleInstance.create()
