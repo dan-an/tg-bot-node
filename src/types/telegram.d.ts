@@ -1,5 +1,4 @@
 export namespace TelegramBot {
-
     interface SendBasicOptions {
         message_thread_id?: number | undefined;
         disable_notification?: boolean | undefined;
@@ -1143,5 +1142,20 @@ export namespace TelegramBot {
         polling_error: (error: Error) => any;
         webhook_error: (error: Error) => any;
         chat_join_request: (query: ChatJoinRequest) => any;
+    }
+
+    interface SendMessageParams {
+        business_connection_id?: string;
+        chat_id: number | string;
+        message_thread_id?: number;
+        text: string;
+        parse_mode?: string;
+        entities?: MessageEntity[];
+        disable_web_page_preview?: boolean;
+        disable_notification?: boolean;
+        protect_content?: boolean;
+        reply_to_message_id?: number;
+        allow_sending_without_reply?: boolean;
+        reply_markup?: InlineKeyboardMarkup | ReplyKeyboardMarkup | ReplyKeyboardRemove | ForceReply;
     }
 }

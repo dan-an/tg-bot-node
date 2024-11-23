@@ -1,16 +1,11 @@
-import {FastifyInstance, FastifyPluginAsync} from "fastify";
-import fp from 'fastify-plugin';
-// @ts-ignore
-import { handleNewMessage, handleCallbackQuery } from "../services/tg/index.ts";
-// @ts-ignore
-import {HttpError, TelegramBot} from "../types/index.ts";
-// @ts-ignore
-import {telegramControllerInstance} from "../app.ts";
+import {FastifyPluginAsync} from "fastify";
+import {HttpError} from "@/types";
+import {telegramControllerInstance} from "@/app";
+import {TelegramBot} from "@/types/telegram";
 
-const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
+const NewMessage: FastifyPluginAsync = async (server) => {
     server.post('/new-message', async (request, reply) => {
-        // @ts-ignore
-        const {message, callback_query} = request.body
+        const {message, callback_query} = (request.body as TelegramBot.Update)
 
         try {
             if (!!message) {
@@ -25,4 +20,4 @@ const NewMessage: FastifyPluginAsync = async (server: FastifyInstance) => {
     })
 }
 
-export default fp(NewMessage)
+export default NewMessage
