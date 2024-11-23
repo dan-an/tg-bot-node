@@ -1,7 +1,6 @@
-import {GoogleSpreadsheet, GoogleSpreadsheetRow} from "google-spreadsheet";
+import {GoogleSpreadsheet} from "google-spreadsheet";
 import {config} from "dotenv";
 import {JWT} from "google-auth-library";
-import {googleInstance} from "@/app";
 
 config()
 

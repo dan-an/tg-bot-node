@@ -1,11 +1,7 @@
-// @ts-ignore
-import {botReplies, categories, columns, filters, hashtags, userRequests} from "../dictionary.ts";
-// @ts-ignore
-import {googleInstance} from "../../../app.ts";
-// @ts-ignore
-import {TelegramBot} from "../../types/index.ts";
-// @ts-ignore
-import {getRandomPhrase, sendMessage} from "../tools.ts";
+import {botReplies, categories, columns, filters} from "@/services/tg/dictionary";
+import {googleInstance} from "@/app";
+import {TelegramBot} from "@/types/telegram";
+import {sendMessage} from "@/services/tg/tools";
 import {EventEmitter} from "events"
 import {config} from "dotenv";
 
@@ -19,12 +15,14 @@ export class WhatToBuyDialog extends EventEmitter {
     filterValue = ''
 
     public async handleNewMessage(message: TelegramBot.Message) {
-        this.chatId = message?.chat?.id
-        this.isReplyToBot = message.reply_to_message && message.reply_to_message.from.username && message.reply_to_message.from.username.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME
+        this.chatId = message?.chat?.id.toString()
+        this.isReplyToBot =
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
-        const reply: TelegramBot.Message = {
+        const reply: TelegramBot.SendMessageParams = {
             chat_id: this.chatId,
             parse_mode: "HTML",
+            text: '',
         }
 
         if (!this.isReplyToBot) {
@@ -51,7 +49,7 @@ export class WhatToBuyDialog extends EventEmitter {
             }
 
             reply.text = botReplies.askFilter[0]
-            reply.reply_markup = JSON.stringify(keyboard)
+            reply.reply_markup = keyboard
             await sendMessage(reply)
         }
     }
@@ -62,7 +60,7 @@ export class WhatToBuyDialog extends EventEmitter {
         this.chatId = message?.chat?.id
 
         if (payload.data) {
-            const reply: TelegramBot.Message = {
+            const reply: TelegramBot.SendMessageParams = {
                 chat_id: this.chatId,
                 text: '',
                 parse_mode: "HTML",
@@ -70,11 +68,10 @@ export class WhatToBuyDialog extends EventEmitter {
 
             const parsedPayload = JSON.parse(payload.data)
 
-
             if (parsedPayload.type) {
                 switch (parsedPayload.type) {
                     case "filterColumn":
-                        this.filterColumn = parsedPayload.data ? filters[parsedPayload.data] : ""
+                        this.filterColumn = parsedPayload.data ? filters[(parsedPayload.data as keyof typeof filters)] : ""
 
                         if (!this.filterColumn) {
                             break
@@ -107,7 +104,7 @@ export class WhatToBuyDialog extends EventEmitter {
                         this.filterValue = parsedPayload.data
                 }
             }
-            const shopItems = await googleInstance.getRows(process.env.SHOPPING_SHEET_ID, this.filterColumn, this.filterValue)
+            const shopItems = await googleInstance.getRows(+(process.env.SHOPPING_SHEET_ID ?? ''), this.filterColumn, this.filterValue)
 
             const formattedList = shopItems.map((item: any) => {
                 return `    - ${item[columns.NAME]}`
