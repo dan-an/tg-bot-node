@@ -1,11 +1,4 @@
-// @ts-ignore
-import {PhraseConfig} from "../../types/index.ts"
-
-export const userRequests: PhraseConfig = {
-    save: ['запомни фильм', 'savefilm'],
-    shoplist: ['сохрани в покупки', 'shopping'],
-    getList: ['что купить?', 'whattobuy']
-}
+import {PhraseConfig} from "@/types"
 
 export enum hashtags {
     FILMS = 'кино',
