@@ -25,7 +25,7 @@ export class TelegramController {
     activeDialog: any = null
 
     public async handleNewMessage(message: TelegramBot.Message) {
-        this.messageMeta = message && message.entities ? message.entities[0] : null
+        this.messageMeta = message && message.entities ? message.entities[0] : null;
         this.hasNeededMeta =
             !!this.messageMeta &&
             (this.messageMeta.type === "bot_command" ||
@@ -34,20 +34,29 @@ export class TelegramController {
         this.isReplyToBot =
             message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
-        const messageText = message?.text?.toLowerCase()?.trim()
-        const chatId = message?.chat?.id
+        const messageText = message?.text?.toLowerCase()?.trim();
+        const chatId = message?.chat?.id;
 
         if (messageText && chatId) {
-            if (this.hasNeededMeta || this.isReplyToBot) {
+            // Проверяем, есть ли активный диалог и вводится ли новая команда
+            if (this.activeDialog && this.hasNeededMeta) {
+                console.log(`Ending current dialog: ${this.activeDialog.constructor.name}`);
+                this.activeDialog = null; // Сброс текущего активного диалога
+            }
 
-                if (!this.activeDialog) {
-                    const regex = new RegExp(`@${process.env.TELEGRAM_BOT_NAME!}|/`, "g")
-                    const botCommand = messageText.replace(regex, '')
+            if (!this.activeDialog) {
+                const regex = new RegExp(`@${process.env.TELEGRAM_BOT_NAME!}|/`, "g");
+                const botCommand = messageText.replace(regex, '').trim();
 
-                    this.setActiveDialog(botCommand)
-                }
+                console.log(`Setting new dialog: ${botCommand}`);
+                this.setActiveDialog(botCommand);
+            }
 
-                await this.activeDialog.handleNewMessage(message)
+            // Если есть активный диалог, передаем управление ему
+            if (this.activeDialog) {
+                await this.activeDialog.handleNewMessage(message);
+            } else {
+                console.log(`No dialog found for message: ${messageText}`);
             }
         }
     }
