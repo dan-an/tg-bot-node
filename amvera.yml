@@ -1,7 +1,0 @@
-meta:
-  environment: node
-  toolchain:
-    name: npm
-    version: 18.18.2
-run:
-  command: npm run dev

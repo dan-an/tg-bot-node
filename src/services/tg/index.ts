@@ -25,7 +25,7 @@ export class TelegramController {
     activeDialog: any = null
 
     public async handleNewMessage(message: TelegramBot.Message) {
-        this.messageMeta = message && message.entities ? message.entities[0] : null
+        this.messageMeta = message && message.entities ? message.entities[0] : null;
         this.hasNeededMeta =
             !!this.messageMeta &&
             (this.messageMeta.type === "bot_command" ||
@@ -34,20 +34,23 @@ export class TelegramController {
         this.isReplyToBot =
             message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
-        const messageText = message?.text?.toLowerCase()?.trim()
-        const chatId = message?.chat?.id
+        const messageText = message?.text?.toLowerCase()?.trim();
+        const chatId = message?.chat?.id;
 
         if (messageText && chatId) {
-            if (this.hasNeededMeta || this.isReplyToBot) {
+            if (this.activeDialog && this.hasNeededMeta) {
+                this.activeDialog = null;
+            }
 
-                if (!this.activeDialog) {
-                    const regex = new RegExp(`@${process.env.TELEGRAM_BOT_NAME!}|/`, "g")
-                    const botCommand = messageText.replace(regex, '')
+            if (!this.activeDialog) {
+                const regex = new RegExp(`@${process.env.TELEGRAM_BOT_NAME!}|/`, "g");
+                const botCommand = messageText.replace(regex, '').trim();
 
-                    this.setActiveDialog(botCommand)
-                }
+                this.setActiveDialog(botCommand);
+            }
 
-                await this.activeDialog.handleNewMessage(message)
+            if (this.activeDialog) {
+                await this.activeDialog.handleNewMessage(message);
             }
         }
     }
