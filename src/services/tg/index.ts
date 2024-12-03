@@ -38,25 +38,19 @@ export class TelegramController {
         const chatId = message?.chat?.id;
 
         if (messageText && chatId) {
-            // Проверяем, есть ли активный диалог и вводится ли новая команда
             if (this.activeDialog && this.hasNeededMeta) {
-                console.log(`Ending current dialog: ${this.activeDialog.constructor.name}`);
-                this.activeDialog = null; // Сброс текущего активного диалога
+                this.activeDialog = null;
             }
 
             if (!this.activeDialog) {
                 const regex = new RegExp(`@${process.env.TELEGRAM_BOT_NAME!}|/`, "g");
                 const botCommand = messageText.replace(regex, '').trim();
 
-                console.log(`Setting new dialog: ${botCommand}`);
                 this.setActiveDialog(botCommand);
             }
 
-            // Если есть активный диалог, передаем управление ему
             if (this.activeDialog) {
                 await this.activeDialog.handleNewMessage(message);
-            } else {
-                console.log(`No dialog found for message: ${messageText}`);
             }
         }
     }
