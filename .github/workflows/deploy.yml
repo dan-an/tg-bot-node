@@ -23,13 +23,14 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 22
-
+          
       # Increment version
       - name: Increment Version
         id: version
         run: |
           npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
-          echo "::set-output name=version::$(node -p \"require('./package.json').version\")"
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> $GITHUB_OUTPUT
 
       # Commit version bump
       - name: Commit Version Bump
