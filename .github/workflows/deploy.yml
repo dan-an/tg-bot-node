@@ -49,7 +49,7 @@ jobs:
       # Push Docker image to private registry
       - name: Push Docker Image
         run: |
-          echo "${{ secrets.REGISTRY_PASSWORD }}" | ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
           docker push ${{ secrets.REGISTRY_HOST }}/${{ secrets.CONTAINER_NAME }}:${{ steps.version.outputs.version }}
 
   deploy:
