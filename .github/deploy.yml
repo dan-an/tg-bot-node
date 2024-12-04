@@ -1,0 +1,70 @@
+name: Deploy Bot
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Part of the version to increment (major, minor, patch)"
+        required: true
+        default: "patch"
+
+jobs:
+  release:
+    name: Release and Push to registry
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22
+
+      # Increment version
+      - name: Increment Version
+        id: version
+        run: |
+          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+          echo "::set-output name=version::$(node -p \"require('./package.json').version\")"
+
+      # Commit version bump
+      - name: Commit Version Bump
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+          git push
+
+      # Build Docker image
+      - name: Build Docker Image
+        run: |
+          docker build -t ${{ secrets.REGISTRY_HOST }}/${{ secrets.CONTAINER_NAME }}:${{ steps.version.outputs.version }} .
+
+      # Push Docker image to private registry
+      - name: Push Docker Image
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
+          docker push ${{ secrets.REGISTRY_HOST }}/${{ secrets.CONTAINER_NAME }}:${{ steps.version.outputs.version }}
+
+  deploy:
+    name: Deploy New Version
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      # SSH to the server and deploy the new version
+      - name: Deploy on Server
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PATH_TO_PROJECT }}
+            docker compose pull
+            docker compose up -d
