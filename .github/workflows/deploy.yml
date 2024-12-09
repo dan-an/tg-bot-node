@@ -13,6 +13,9 @@ jobs:
     name: Release and Push to registry
     runs-on: ubuntu-latest
 
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
     steps:
       # Checkout the code
       - name: Checkout Code
@@ -51,10 +54,6 @@ jobs:
         run: |
           echo "${{ secrets.REGISTRY_PASSWORD }}" | docker login ${{ secrets.REGISTRY_HOST }} -u ${{ secrets.REGISTRY_USER }} --password-stdin
           docker push ${{ secrets.REGISTRY_HOST }}/${{ secrets.CONTAINER_NAME }}:${{ steps.version.outputs.version }}
-          
-      - name: Update .env
-        run: |
-          echo "VERSION=${{ steps.version.outputs.version }}" > .env
 
   deploy:
     name: Deploy New Version
@@ -62,7 +61,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # SSH to update .env and deploy the new version
       - name: Update .env on Server
         uses: appleboy/ssh-action@v0.1.9
         with:
@@ -71,7 +69,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ${{ secrets.PATH_TO_PROJECT }}
-            sed -i "s/^VERSION=.*/VERSION=${{ steps.version.outputs.version }}/" .env || echo "VERSION=${{ steps.version.outputs.version }}" >> .env
+            sed -i "s/^VERSION=.*/VERSION=${{ needs.release.outputs.version }}/" .env || echo "VERSION=${{ needs.release.outputs.version }}" >> .env
 
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.9
