@@ -62,7 +62,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # SSH to the server and deploy the new version
+      # SSH to update .env and deploy the new version
+      - name: Update .env on Server
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ secrets.PATH_TO_PROJECT }}
+            sed -i "s/^VERSION=.*/VERSION=${{ steps.version.outputs.version }}/" .env || echo "VERSION=${{ steps.version.outputs.version }}" >> .env
+
       - name: Deploy on Server
         uses: appleboy/ssh-action@v0.1.9
         with:
@@ -73,3 +83,4 @@ jobs:
             cd ${{ secrets.PATH_TO_PROJECT }}
             docker compose pull
             docker compose up -d
+  
