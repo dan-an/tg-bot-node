@@ -54,7 +54,7 @@ jobs:
           
       - name: Update .env
         run: |
-          echo "BOT_VERSION=${{ steps.version.outputs.version }}" > .env
+          echo "VERSION=${{ steps.version.outputs.version }}" > .env
 
   deploy:
     name: Deploy New Version
