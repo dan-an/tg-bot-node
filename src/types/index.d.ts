@@ -14,10 +14,10 @@ export interface PhraseConfig {
     [key: string]: string[];
 }
 
-export interface ProccessedEvent {
+export interface ProcessedEvent {
     summary: string, date: string
 }
 
 export interface EventsMap {
-    [key: string]: Array<ProccessedEvent>;
+    [key: string]: Array<ProcessedEvent>;
 }

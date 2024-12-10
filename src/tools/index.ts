@@ -1,11 +1,11 @@
-import {EventsMap, ProccessedEvent} from "@/types";
+import {EventsMap, ProcessedEvent} from "@/types";
 
 export const chooseRandomElement = (arr: any[]) => {
     return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export const generateBirthdayMessage = (data: EventsMap): string => {
-    const sections: { [key: string]: ProccessedEvent[] } = {
+    const sections: { [key: string]: ProcessedEvent[] } = {
         'Сегодня': data.today,
         'Завтра': data.tomorrow,
         'В ближайшие три дня': data.inThreeDays,
