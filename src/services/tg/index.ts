@@ -3,6 +3,7 @@ import {TelegramBot} from "@/types/telegram";
 import {SaveFilmDialog} from "@/services/tg/dialogs/saveFilmDialog"
 import {ShoppingDialog} from "@/services/tg/dialogs/shoppingDialog";
 import {WhatToBuyDialog} from "@/services/tg/dialogs/whatToBuyDialog";
+import {sendMessage} from "@/services/tg/tools";
 
 config()
 
@@ -68,5 +69,9 @@ export class TelegramController {
         this.activeDialog.on('dialog is over', () => {
             this.activeDialog = null
         })
+    }
+
+    public async sendMessage(message: TelegramBot.SendMessageParams) {
+        await sendMessage(message);
     }
 }

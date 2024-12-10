@@ -1,3 +1,5 @@
+import {calendar_v3} from "@googleapis/calendar";
+
 export class HttpError extends Error {
     statusCode: number;
 
@@ -12,3 +14,10 @@ export interface PhraseConfig {
     [key: string]: string[];
 }
 
+export interface ProccessedEvent {
+    summary: string, date: string
+}
+
+export interface EventsMap {
+    [key: string]: Array<ProccessedEvent>;
+}
