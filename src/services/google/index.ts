@@ -2,7 +2,6 @@ import {GoogleSpreadsheet} from "google-spreadsheet";
 import {config} from "dotenv";
 import {JWT} from "google-auth-library";
 import {calendar, calendar_v3} from "@googleapis/calendar";
-import * as process from "process";
 import {EventsMap} from "@/types";
 import dayjs from "dayjs";
 
