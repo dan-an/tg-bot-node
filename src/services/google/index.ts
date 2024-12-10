@@ -104,13 +104,17 @@ export class GoogleInstance {
         }, this.birthdayEvents);
     }
 
-    public async getBirthdayEvents(period: string) {
-        if (!this.birthdayEvents[period]) {
-            console.warn(`Период "${period}" отсутствует в событиях.`);
-            return [];
+    public getBirthdayEvents(period?: string): EventsMap {
+        if (period) {
+            if (!this.birthdayEvents[period]) {
+                console.warn(`Период "${period}" отсутствует в событиях.`);
+                return {};
+            }
+
+            return { [period]: this.birthdayEvents[period] };
         }
 
-        return this.birthdayEvents[period]
+        return this.birthdayEvents;
     }
 
     static async create() {
