@@ -3,10 +3,14 @@ import { config } from 'dotenv'
 import NewMessage from "@/routes/newMessage";
 import { GoogleInstance } from "@/services/google";
 import { TelegramController } from "@/services/tg";
-import Bree from "bree";
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import {generateBirthdayMessage} from "@/tools";
-import {TelegramBot} from "@/types/telegram";
-import * as process from "process";
+import { TelegramBot } from "@/types/telegram";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 config()
 
@@ -19,33 +23,38 @@ export const telegramControllerInstance = new TelegramController()
 // Register routes
 server.register(NewMessage)
 
-const bree = new Bree({
-    jobs: [
-        {
-            name: 'fetch-birthday-events',
-            interval: 'at 8:00 am',
-        },
-    ],
-});
+const executeTask = async () => {
+    console.log(`[TASK] Запуск задачи в 8:00 MSK`);
+    await googleInstance.fetchBirthdayEvents();
+    const text = generateBirthdayMessage(googleInstance.getBirthdayEvents())
 
-bree.add({
-    name: 'fetch-birthday-events',
-    path: async () => {
-        console.log(`[TASK] Запуск задачи в 8:00 MSK`);
-        await googleInstance.fetchBirthdayEvents();
-        const text = generateBirthdayMessage(googleInstance.getBirthdayEvents())
+    const message: TelegramBot.SendMessageParams = {
+        chat_id: process.env.TELEGRAM_MAIN_CHAT_ID!,
+        text
+    }
 
-        const message: TelegramBot.SendMessageParams = {
-            chat_id: process.env.TELEGRAM_MAIN_CHAT_ID!,
-            text
+    await telegramControllerInstance.sendMessage(message);
+}
+
+const startScheduler = async () => {
+    while (true) {
+        const now = dayjs().tz("Europe/Moscow");
+
+        if (now.hour() === 8 && now.minute() === 0) {
+            try {
+                await executeTask();
+            } catch (error) {
+                console.error(`[TASK] Ошибка выполнения задачи:`, error);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 60 * 1000));
         }
 
-        await telegramControllerInstance.sendMessage(message);
-    },
-});
+        await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+    }
+}
 
-// Запускаем Bree
-bree.start();
+startScheduler();
 
 // start
 const start = async () => {
