@@ -1,8 +1,8 @@
-import {EventsMap, ProcessedEvent} from "@/types";
+import { EventsMap, ProcessedEvent } from '@/types';
 
 export const chooseRandomElement = (arr: any[]) => {
     return arr[Math.floor(Math.random() * arr.length)];
-}
+};
 
 export const generateBirthdayMessage = (data: EventsMap): string => {
     const sections: { [key: string]: ProcessedEvent[] } = {
@@ -14,7 +14,7 @@ export const generateBirthdayMessage = (data: EventsMap): string => {
         'В ближайшие три недели': data.inThreeWeeks,
     };
 
-    let message = "🎉 Напоминаю о ближайших днях рождения:\n\n";
+    let message = '🎉 Напоминаю о ближайших днях рождения:\n\n';
 
     for (const [title, events] of Object.entries(sections)) {
         if (events.length > 0) {
@@ -27,4 +27,4 @@ export const generateBirthdayMessage = (data: EventsMap): string => {
     }
 
     return message.trim();
-}
+};

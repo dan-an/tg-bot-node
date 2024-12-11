@@ -1,12 +1,10 @@
-import {calendar_v3} from "@googleapis/calendar";
-
 export class HttpError extends Error {
     statusCode: number;
 
     constructor(statusCode: number, message: string) {
         super(message);
         this.statusCode = statusCode;
-        this.name = "HttpError";
+        this.name = 'HttpError';
     }
 }
 
@@ -15,7 +13,8 @@ export interface PhraseConfig {
 }
 
 export interface ProcessedEvent {
-    summary: string, date: string
+    summary: string,
+    date: string
 }
 
 export interface EventsMap {
