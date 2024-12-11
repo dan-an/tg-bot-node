@@ -1,7 +1,6 @@
-import { botReplies, categories, hashtags } from '@/services/tg/dictionary';
-import { googleInstance } from '@/app';
+import { botReplies, event_types, hashtags } from '@/services/tg/dictionary';
 import { TelegramBot } from '@/types/telegram';
-import { getRandomPhrase, sendMessage } from '@/services/tg/tools';
+import { sendMessage } from '@/services/tg/tools';
 import { EventEmitter } from 'events';
 import { config } from 'dotenv';
 
@@ -11,6 +10,7 @@ config();
 export class AddEventDialog extends EventEmitter {
     chatId = '';
     isReplyToBot = false;
+    eventType: keyof typeof event_types = 'NONE';
 
     public async handleNewMessage(message: TelegramBot.Message) {
         const messageText = message?.text?.toLowerCase()?.trim() ?? '';
@@ -25,22 +25,22 @@ export class AddEventDialog extends EventEmitter {
         };
 
         if (!this.isReplyToBot) {
-            reply.text = `#${hashtags.ADD_EVENT}\n${getRandomPhrase(botReplies.forceUser)}`;
-            await sendMessage(reply);
-        } else {
-            this.shoppingList = messageText.split('\n');
             const keyboard: TelegramBot.InlineKeyboardMarkup = {
-                inline_keyboard: (Object.values(categories) as string[]).reduce<{
+                inline_keyboard: (Object.entries(event_types) as string[][]).reduce<{
                     text: string, callback_data: string
-                }[][]>((keyboard, category: string) => {
+                }[][]>((keyboard, eventType: string[]) => {
+                    console.log('eventType', eventType);
                     if (!keyboard.length || keyboard.at(-1)!.length === 2) {
                         keyboard.push([]);
                     }
 
                     if (keyboard.at(-1)!.length < 2) {
                         keyboard.at(-1)!.push({
-                            text: category,
-                            callback_data: JSON.stringify({ type: 'filterValue', data: category }),
+                            text: eventType[1],
+                            callback_data: JSON.stringify({
+                                type: 'eventType',
+                                data: eventType[1] !== event_types.NONE ? eventType[0] : '',
+                            }),
                         });
                     }
 
@@ -48,11 +48,15 @@ export class AddEventDialog extends EventEmitter {
                 }, []),
             };
 
-            reply.text = botReplies.askCategory[0];
+            reply.text = botReplies.askEventType[0];
             reply.reply_markup = keyboard;
+        } else {
+            await this.handleAddEvent(messageText);
 
-            await sendMessage(reply);
+            reply.text = `Сохранил в Семейный календарь, напомню ближе к делу`;
         }
+
+        await sendMessage(reply);
     }
 
     public async handleCallbackQuery(payload: any) {
@@ -69,15 +73,26 @@ export class AddEventDialog extends EventEmitter {
 
             const parsedPayload = JSON.parse(payload.data);
 
-            const rows: string[][] = this.shoppingList.map(item => [item, parsedPayload.data]);
+            console.log('parsedPayload', parsedPayload);
 
-            await googleInstance.addRows(parseInt(process.env.SHOPPING_SHEET_ID!), rows);
-            this.shoppingList = [];
+            if (parsedPayload.data) {
+                this.eventType = parsedPayload.data;
 
-            reply.text = `Сохранила сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}/edit#gid=${process.env.SHOPPING_SHEET_ID}`;
+                switch (parsedPayload.data) {
+                    case 'BIRTHDAY': {
+                        reply.text = `#${hashtags.ADD_EVENT}\n${botReplies.askBirthdayContent[0]}`;
+                    }
+                }
+            }
 
             await sendMessage(reply);
-            this.emit('dialog is over');
         }
+    }
+
+    private async handleAddEvent(eventContext: string) {
+        const eventContextWithType = `${event_types[this.eventType]}. ${eventContext}`;
+        console.log('eventContextWithType', eventContextWithType);
+
+        // await googleInstance.addEvent(eventContext)
     }
 }
