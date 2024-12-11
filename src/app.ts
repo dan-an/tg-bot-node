@@ -1,44 +1,44 @@
-import fastify from "fastify";
-import { config } from 'dotenv'
-import NewMessage from "@/routes/newMessage";
-import { GoogleInstance } from "@/services/google";
-import { TelegramController } from "@/services/tg";
+import fastify from 'fastify';
+import { config } from 'dotenv';
+import NewMessage from '@/routes/newMessage';
+import { GoogleInstance } from '@/services/google';
+import { TelegramController } from '@/services/tg';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import {generateBirthdayMessage} from "@/tools";
-import { TelegramBot } from "@/types/telegram";
+import { generateBirthdayMessage } from '@/tools';
+import { TelegramBot } from '@/types/telegram';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-config()
+config();
 
-const server = fastify()
+const server = fastify();
 
 // Initialize Google and Telegram clients
-export const googleInstance = await GoogleInstance.create()
-export const telegramControllerInstance = new TelegramController()
+export const googleInstance = await GoogleInstance.create();
+export const telegramControllerInstance = new TelegramController();
 
 // Register routes
-server.register(NewMessage)
+server.register(NewMessage);
 
 const executeTask = async () => {
     console.log(`[TASK] Запуск задачи в 8:00 MSK`);
     await googleInstance.fetchBirthdayEvents();
-    const text = generateBirthdayMessage(googleInstance.getBirthdayEvents())
+    const text = generateBirthdayMessage(googleInstance.getBirthdayEvents());
 
     const message: TelegramBot.SendMessageParams = {
         chat_id: process.env.TELEGRAM_MAIN_CHAT_ID!,
-        text
-    }
+        text,
+    };
 
     await telegramControllerInstance.sendMessage(message);
-}
+};
 
 const startScheduler = async () => {
     while (true) {
-        const now = dayjs().tz("Europe/Moscow");
+        const now = dayjs().tz('Europe/Moscow');
 
         if (now.hour() === 8 && now.minute() === 0) {
             try {
@@ -52,7 +52,7 @@ const startScheduler = async () => {
 
         await new Promise(resolve => setTimeout(resolve, 60 * 1000));
     }
-}
+};
 
 startScheduler();
 
@@ -60,9 +60,9 @@ startScheduler();
 const start = async () => {
     try {
         await server.listen({ port: parseInt(process.env.PORT!), host: '0.0.0.0' });
-        console.log(`Server is listening at port ${process.env.PORT}`)
+        console.log(`Server is listening at port ${process.env.PORT}`);
     } catch (err) {
-        console.log(err)
+        console.log(err);
     }
 };
 start();

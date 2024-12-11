@@ -15,6 +15,7 @@ export namespace TelegramBot {
 
     interface TextListener {
         regexp: RegExp;
+
         callback(msg: Message, match: RegExpExecArray | null): void;
     }
 
@@ -22,83 +23,84 @@ export namespace TelegramBot {
         id: number;
         chatId: ChatId;
         messageId: number | string;
+
         callback(msg: Message): void;
     }
 
-    type ChatType = "private" | "group" | "supergroup" | "channel";
+    type ChatType = 'private' | 'group' | 'supergroup' | 'channel';
 
     type ChatAction =
-        | "typing"
-        | "upload_photo"
-        | "record_video"
-        | "upload_video"
-        | "record_voice"
-        | "upload_voice"
-        | "upload_document"
-        | "find_location"
-        | "record_video_note"
-        | "upload_video_note";
+        | 'typing'
+        | 'upload_photo'
+        | 'record_video'
+        | 'upload_video'
+        | 'record_voice'
+        | 'upload_voice'
+        | 'upload_document'
+        | 'find_location'
+        | 'record_video_note'
+        | 'upload_video_note';
 
-    type ChatMemberStatus = "creator" | "administrator" | "member" | "restricted" | "left" | "kicked";
+    type ChatMemberStatus = 'creator' | 'administrator' | 'member' | 'restricted' | 'left' | 'kicked';
 
-    type DocumentMimeType = "application/pdf" | "application/zip";
+    type DocumentMimeType = 'application/pdf' | 'application/zip';
 
     type MessageType =
-        | "text"
-        | "animation"
-        | "audio"
-        | "channel_chat_created"
-        | "contact"
-        | "delete_chat_photo"
-        | "document"
-        | "game"
-        | "group_chat_created"
-        | "invoice"
-        | "left_chat_member"
-        | "location"
-        | "migrate_from_chat_id"
-        | "migrate_to_chat_id"
-        | "new_chat_members"
-        | "new_chat_photo"
-        | "new_chat_title"
-        | "passport_data"
-        | "photo"
-        | "pinned_message"
-        | "sticker"
-        | "successful_payment"
-        | "supergroup_chat_created"
-        | "video"
-        | "video_note"
-        | "voice"
-        | "video_chat_started"
-        | "video_chat_ended"
-        | "video_chat_participants_invited"
-        | "video_chat_scheduled"
-        | "message_auto_delete_timer_changed"
-        | "chat_invite_link"
-        | "chat_member_updated"
-        | "web_app_data";
+        | 'text'
+        | 'animation'
+        | 'audio'
+        | 'channel_chat_created'
+        | 'contact'
+        | 'delete_chat_photo'
+        | 'document'
+        | 'game'
+        | 'group_chat_created'
+        | 'invoice'
+        | 'left_chat_member'
+        | 'location'
+        | 'migrate_from_chat_id'
+        | 'migrate_to_chat_id'
+        | 'new_chat_members'
+        | 'new_chat_photo'
+        | 'new_chat_title'
+        | 'passport_data'
+        | 'photo'
+        | 'pinned_message'
+        | 'sticker'
+        | 'successful_payment'
+        | 'supergroup_chat_created'
+        | 'video'
+        | 'video_note'
+        | 'voice'
+        | 'video_chat_started'
+        | 'video_chat_ended'
+        | 'video_chat_participants_invited'
+        | 'video_chat_scheduled'
+        | 'message_auto_delete_timer_changed'
+        | 'chat_invite_link'
+        | 'chat_member_updated'
+        | 'web_app_data';
 
     type MessageEntityType =
-        | "mention"
-        | "hashtag"
-        | "cashtag"
-        | "bot_command"
-        | "url"
-        | "email"
-        | "phone_number"
-        | "bold"
-        | "italic"
-        | "underline"
-        | "strikethrough"
-        | "code"
-        | "pre"
-        | "text_link"
-        | "text_mention"
-        | "spoiler"
-        | "custom_emoji";
+        | 'mention'
+        | 'hashtag'
+        | 'cashtag'
+        | 'bot_command'
+        | 'url'
+        | 'email'
+        | 'phone_number'
+        | 'bold'
+        | 'italic'
+        | 'underline'
+        | 'strikethrough'
+        | 'code'
+        | 'pre'
+        | 'text_link'
+        | 'text_mention'
+        | 'spoiler'
+        | 'custom_emoji';
 
-    type ParseMode = "Markdown" | "MarkdownV2" | "HTML";
+    type ParseMode = 'Markdown' | 'MarkdownV2' | 'HTML';
 
     /// TELEGRAM TYPES ///
     interface PassportFile {
@@ -327,11 +329,11 @@ export namespace TelegramBot {
     }
 
     interface InputMediaPhoto extends InputMediaBase {
-        type: "photo";
+        type: 'photo';
     }
 
     interface InputMediaVideo extends InputMediaBase {
-        type: "video";
+        type: 'video';
         width?: number | undefined;
         height?: number | undefined;
         duration?: number | undefined;
@@ -372,7 +374,7 @@ export namespace TelegramBot {
         foursquare_type?: string | undefined;
     }
 
-    type PollType = "regular" | "quiz";
+    type PollType = 'regular' | 'quiz';
 
     interface PollAnswer {
         poll_id: string;
@@ -549,23 +551,23 @@ export namespace TelegramBot {
     }
 
     type ChatPermissionsNames =
-        | "can_send_messages"
-        | "can_send_audios"
-        | "can_send_documents"
-        | "can_send_photos"
-        | "can_send_videos"
-        | "can_send_video_notes"
-        | "can_send_voice_notes"
-        | "can_send_polls"
-        | "can_send_other_messages"
-        | "can_add_web_page_previews"
-        | "can_change_info"
-        | "can_invite_users"
-        | "can_pin_messages"
-        | "can_manage_topics";
+        | 'can_send_messages'
+        | 'can_send_audios'
+        | 'can_send_documents'
+        | 'can_send_photos'
+        | 'can_send_videos'
+        | 'can_send_video_notes'
+        | 'can_send_voice_notes'
+        | 'can_send_polls'
+        | 'can_send_other_messages'
+        | 'can_add_web_page_previews'
+        | 'can_change_info'
+        | 'can_invite_users'
+        | 'can_pin_messages'
+        | 'can_manage_topics';
 
     type ChatPermissions = Partial<Record<ChatPermissionsNames, boolean>>;
-    type StickerType = "regular" | "mask" | "custom_emoji";
+    type StickerType = 'regular' | 'mask' | 'custom_emoji';
 
     interface Sticker extends FileBase {
         type: StickerType;
@@ -602,7 +604,8 @@ export namespace TelegramBot {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-interface -- Currently holds no information (https://core.telegram.org/bots/api#forumtopicclosed)
-    interface ForumTopicClosed {}
+    interface ForumTopicClosed {
+    }
 
     interface ForumTopicEdited {
         name: string;
@@ -610,13 +613,16 @@ export namespace TelegramBot {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-interface -- Currently holds no information (https://core.telegram.org/bots/api#forumtopicreopened)
-    interface ForumTopicReopened {}
+    interface ForumTopicReopened {
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-interface -- Currently holds no information (https://core.telegram.org/bots/api#generalforumtopichidden)
-    interface GeneralForumTopicHidden {}
+    interface GeneralForumTopicHidden {
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-empty-interface -- Currently holds no information (https://core.telegram.org/bots/api#generalforumtopicunhidden)
-    interface GeneralForumTopicUnhidden {}
+    interface GeneralForumTopicUnhidden {
+    }
 
     interface UserShared {
         request_id: number;
@@ -649,7 +655,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultArticle extends InlineQueryResultBase {
-        type: "article";
+        type: 'article';
         title: string;
         input_message_content: InputMessageContent;
         url?: string | undefined;
@@ -661,7 +667,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultPhoto extends InlineQueryResultBase {
-        type: "photo";
+        type: 'photo';
         photo_url: string;
         thumb_url: string;
         photo_width?: number | undefined;
@@ -673,7 +679,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultGif extends InlineQueryResultBase {
-        type: "gif";
+        type: 'gif';
         gif_url: string;
         gif_width?: number | undefined;
         gif_height?: number | undefined;
@@ -685,7 +691,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultMpeg4Gif extends InlineQueryResultBase {
-        type: "mpeg4_gif";
+        type: 'mpeg4_gif';
         mpeg4_url: string;
         mpeg4_width?: number | undefined;
         mpeg4_height?: number | undefined;
@@ -697,7 +703,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultVideo extends InlineQueryResultBase {
-        type: "video";
+        type: 'video';
         video_url: string;
         mime_type: string;
         thumb_url: string;
@@ -711,7 +717,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultAudio extends InlineQueryResultBase {
-        type: "audio";
+        type: 'audio';
         audio_url: string;
         title: string;
         caption?: string | undefined;
@@ -721,7 +727,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultVoice extends InlineQueryResultBase {
-        type: "voice";
+        type: 'voice';
         voice_url: string;
         title: string;
         caption?: string | undefined;
@@ -730,7 +736,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultDocument extends InlineQueryResultBase {
-        type: "document";
+        type: 'document';
         title: string;
         caption?: string | undefined;
         document_url: string;
@@ -753,17 +759,17 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultLocation extends InlineQueryResultLocationBase {
-        type: "location";
+        type: 'location';
     }
 
     interface InlineQueryResultVenue extends InlineQueryResultLocationBase {
-        type: "venue";
+        type: 'venue';
         address: string;
         foursquare_id?: string | undefined;
     }
 
     interface InlineQueryResultContact extends InlineQueryResultBase {
-        type: "contact";
+        type: 'contact';
         phone_number: string;
         first_name: string;
         last_name?: string | undefined;
@@ -774,12 +780,12 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultGame extends InlineQueryResultBase {
-        type: "game";
+        type: 'game';
         game_short_name: string;
     }
 
     interface InlineQueryResultCachedPhoto extends InlineQueryResultBase {
-        type: "photo";
+        type: 'photo';
         photo_file_id: string;
         title?: string | undefined;
         description?: string | undefined;
@@ -788,7 +794,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedGif extends InlineQueryResultBase {
-        type: "gif";
+        type: 'gif';
         gif_file_id: string;
         title?: string | undefined;
         caption?: string | undefined;
@@ -796,7 +802,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedMpeg4Gif extends InlineQueryResultBase {
-        type: "mpeg4_gif";
+        type: 'mpeg4_gif';
         mpeg4_file_id: string;
         title?: string | undefined;
         caption?: string | undefined;
@@ -804,13 +810,13 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedSticker extends InlineQueryResultBase {
-        type: "sticker";
+        type: 'sticker';
         sticker_file_id: string;
         input_message_content?: InputMessageContent | undefined;
     }
 
     interface InlineQueryResultCachedDocument extends InlineQueryResultBase {
-        type: "document";
+        type: 'document';
         title: string;
         document_file_id: string;
         description?: string | undefined;
@@ -819,7 +825,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedVideo extends InlineQueryResultBase {
-        type: "video";
+        type: 'video';
         video_file_id: string;
         title: string;
         description?: string | undefined;
@@ -828,7 +834,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedVoice extends InlineQueryResultBase {
-        type: "voice";
+        type: 'voice';
         voice_file_id: string;
         title: string;
         caption?: string | undefined;
@@ -836,7 +842,7 @@ export namespace TelegramBot {
     }
 
     interface InlineQueryResultCachedAudio extends InlineQueryResultBase {
-        type: "audio";
+        type: 'audio';
         audio_file_id: string;
         caption?: string | undefined;
         input_message_content?: InputMessageContent | undefined;
@@ -1006,33 +1012,33 @@ export namespace TelegramBot {
     export type ChatId = number | string;
 
     interface BotCommandScopeDefault {
-        type: "default";
+        type: 'default';
     }
 
     interface BotCommandScopeAllPrivateChats {
-        type: "all_private_chats";
+        type: 'all_private_chats';
     }
 
     interface BotCommandScopeAllGroupChats {
-        type: "all_group_chats";
+        type: 'all_group_chats';
     }
 
     interface BotCommandScopeAllChatAdministrators {
-        type: "all_chat_administrators";
+        type: 'all_chat_administrators';
     }
 
     interface BotCommandScopeChat {
-        type: "chat";
+        type: 'chat';
         chat_id: ChatId;
     }
 
     interface BotCommandScopeChatAdministrators {
-        type: "chat_administrators";
+        type: 'chat_administrators';
         chat_id: ChatId;
     }
 
     interface BotCommandScopeChatMember {
-        type: "chat_member";
+        type: 'chat_member';
         chat_id: ChatId;
         user_id: number;
     }
@@ -1045,6 +1051,7 @@ export namespace TelegramBot {
         | BotCommandScopeChat
         | BotCommandScopeChatAdministrators
         | BotCommandScopeChatMember;
+
     interface WebAppInfo {
         url: string;
     }
@@ -1055,15 +1062,17 @@ export namespace TelegramBot {
     }
 
     interface MenuButtonCommands {
-        type: "commands";
+        type: 'commands';
     }
+
     interface MenuButtonWebApp {
-        type: "web_app";
+        type: 'web_app';
         text: string;
         web_app: WebAppInfo;
     }
+
     interface MenuButtonDefault {
-        type: "default";
+        type: 'default';
     }
 
     type MenuButton = MenuButtonCommands | MenuButtonWebApp | MenuButtonDefault;

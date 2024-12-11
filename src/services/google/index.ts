@@ -1,16 +1,16 @@
-import {GoogleSpreadsheet} from "google-spreadsheet";
-import {config} from "dotenv";
-import {JWT} from "google-auth-library";
-import {calendar, calendar_v3} from "@googleapis/calendar";
-import {EventsMap} from "@/types";
-import dayjs from "dayjs";
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { config } from 'dotenv';
+import { JWT } from 'google-auth-library';
+import { calendar, calendar_v3 } from '@googleapis/calendar';
+import { EventsMap } from '@/types';
+import dayjs from 'dayjs';
 
-config()
+config();
 
 export class GoogleInstance {
     private serviceAccountAuth: JWT = new JWT();
     private doc: GoogleSpreadsheet = null as unknown as GoogleSpreadsheet;
-    private calendarClient: calendar_v3.Calendar = null as unknown as calendar_v3.Calendar
+    private calendarClient: calendar_v3.Calendar = null as unknown as calendar_v3.Calendar;
     private birthdayEvents: EventsMap = {
         today: [],
         tomorrow: [],
@@ -19,42 +19,49 @@ export class GoogleInstance {
         inTwoWeeks: [],
         inThreeWeeks: [],
     };
+
+    static async create() {
+        const o = new GoogleInstance();
+        await o.init();
+        return o;
+    }
+
     async init() {
         this.serviceAccountAuth = new JWT({
             email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
+            key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
             scopes: [
                 'https://www.googleapis.com/auth/spreadsheets',
                 'https://www.googleapis.com/auth/calendar',
             ],
         });
 
-        this.doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, this.serviceAccountAuth)
-        this.calendarClient = calendar({version: 'v3', auth: this.serviceAccountAuth, })
+        this.doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, this.serviceAccountAuth);
+        this.calendarClient = calendar({ version: 'v3', auth: this.serviceAccountAuth });
 
-        await this.doc.loadInfo()
+        await this.doc.loadInfo();
     }
 
     public async addRow(worksheetId: number, values: string[]) {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        await worksheet.addRow(values)
+        const worksheet = this.doc.sheetsById[worksheetId];
+        await worksheet.addRow(values);
     }
 
     public async addRows(worksheetId: number, values: string[][]) {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        await worksheet.addRows(values)
+        const worksheet = this.doc.sheetsById[worksheetId];
+        await worksheet.addRows(values);
     }
 
-    public async getRows(worksheetId: number, column: string = "Категория", filterValue: string = 'продукты') {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        const rows = await worksheet.getRows()
-        const formattedRows = rows.map(row => row.toObject())
-        let filteredRows = JSON.parse(JSON.stringify(formattedRows))
+    public async getRows(worksheetId: number, column: string = 'Категория', filterValue: string = 'продукты') {
+        const worksheet = this.doc.sheetsById[worksheetId];
+        const rows = await worksheet.getRows();
+        const formattedRows = rows.map(row => row.toObject());
+        let filteredRows = JSON.parse(JSON.stringify(formattedRows));
         if (column && filterValue) {
-            filteredRows = formattedRows.filter(row => row[column] === filterValue)
+            filteredRows = formattedRows.filter(row => row[column] === filterValue);
         }
 
-        return filteredRows
+        return filteredRows;
     }
 
     public async fetchBirthdayEvents() {
@@ -66,11 +73,11 @@ export class GoogleInstance {
             q: 'день рождения',
             timeMin: now.toISOString(),
             timeMax: threeWeeksFromNow.toISOString(),
-        })
+        });
         const extractName = (summary: string): string => {
             const match = summary.match(/День рождения\.\s*(.+)/i);
             return match ? match[1] : 'Неизвестное имя';
-        }
+        };
 
         const events = res.data.items || [];
         const tomorrow = now.add(1, 'day');
@@ -114,11 +121,5 @@ export class GoogleInstance {
         }
 
         return this.birthdayEvents;
-    }
-
-    static async create() {
-        const o = new GoogleInstance();
-        await o.init();
-        return o;
     }
 }
