@@ -7,8 +7,6 @@ const NewMessage: FastifyPluginAsync = async (server) => {
     server.post('/new-message', async (request, reply) => {
         const {message, callback_query} = (request.body as TelegramBot.Update)
 
-        console.log(message);
-
         try {
             if (!!message) {
                 await telegramControllerInstance.handleNewMessage(message)
