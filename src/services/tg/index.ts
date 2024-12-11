@@ -64,7 +64,11 @@ export class TelegramController {
 
     private setActiveDialog(dialogName: string) {
         const key = Object.keys(dialogs).filter(key => key.toLowerCase().includes(dialogName))[0]
-        // @ts-ignore
+
+        if(!key) {
+            return
+        }
+
         this.activeDialog = new dialogs[key]()
         this.activeDialog.on('dialog is over', () => {
             this.activeDialog = null
