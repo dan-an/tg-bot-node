@@ -122,4 +122,8 @@ export class GoogleInstance {
 
         return this.birthdayEvents;
     }
+
+    public async addEvent() {
+
+    }
 }

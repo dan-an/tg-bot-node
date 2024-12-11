@@ -3,6 +3,7 @@ import { TelegramBot } from '@/types/telegram';
 import { SaveFilmDialog } from '@/services/tg/dialogs/saveFilmDialog';
 import { ShoppingDialog } from '@/services/tg/dialogs/shoppingDialog';
 import { WhatToBuyDialog } from '@/services/tg/dialogs/whatToBuyDialog';
+import { AddEventDialog } from '@/services/tg/dialogs/addEventDialog';
 import { sendMessage } from '@/services/tg/tools';
 
 config();
@@ -17,6 +18,7 @@ const dialogs: Record<string, new () => DialogInstance> = {
     SaveFilmDialog,
     ShoppingDialog,
     WhatToBuyDialog,
+    AddEventDialog,
 };
 
 export class TelegramController {

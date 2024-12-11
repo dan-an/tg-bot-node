@@ -3,7 +3,8 @@ import { PhraseConfig } from '@/types';
 export enum hashtags {
     FILMS = 'кино',
     SHOPPING = 'покупки',
-    GETLIST = 'что_купить'
+    GETLIST = 'что_купить',
+    ADD_EVENT = 'добавить_событие'
 }
 
 export enum categories {
