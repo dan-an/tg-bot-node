@@ -98,7 +98,9 @@ export class GoogleInstance {
         const inTwoWeeks = now.add(2, 'week');
         const inThreeWeeks = now.add(3, 'week');
 
-        events.reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
+        events
+            .filter(event => event.status !== "cancelled")
+            .reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
             const eventDate = dayjs(event.start?.dateTime || event.start?.date);
             const formattedDate = eventDate.format('DD.MM.YYYY');
             const name = extractName(event.summary || '');
