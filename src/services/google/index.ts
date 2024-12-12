@@ -4,6 +4,9 @@ import { JWT } from 'google-auth-library';
 import { calendar, calendar_v3 } from '@googleapis/calendar';
 import { EventsMap } from '@/types';
 import dayjs from 'dayjs';
+import customParseFormat from "dayjs/plugin/customParseFormat";
+
+dayjs.extend(customParseFormat);
 
 config();
 
@@ -65,6 +68,15 @@ export class GoogleInstance {
     }
 
     public async fetchBirthdayEvents() {
+        this.birthdayEvents = {
+            today: [],
+            tomorrow: [],
+            inThreeDays: [],
+            inOneWeek: [],
+            inTwoWeeks: [],
+            inThreeWeeks: [],
+        };
+
         const now = dayjs().startOf('day');
         const threeWeeksFromNow = dayjs().add(3, 'week');
 
@@ -123,7 +135,41 @@ export class GoogleInstance {
         return this.birthdayEvents;
     }
 
-    public async addEvent() {
+    public async addEvent(eventContext: string) {
+        const event: calendar_v3.Schema$Event = {
+            summary: '',
+            start: {
+                date: '',
+            },
+            end: {
+                date: '',
+            },
+            recurrence: ['RRULE:FREQ=YEARLY;INTERVAL=1']
+        }
 
+        const dateRegex = /\b(\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?)\b/;
+        const match = eventContext.match(dateRegex);
+        const currentYear = dayjs().year();
+
+        if (match) {
+            let rawDate = match[1]; // Найденная дата
+            event.summary = eventContext.replace(rawDate, "").trim(); // Остальной текст
+
+            const dateParts = rawDate.split(/[-./]/);
+            if (dateParts.length === 2) {
+                rawDate += `.${currentYear}`;
+            }
+
+            const parsedDate = dayjs(rawDate, "DD.MM.YYYY");
+            if (parsedDate.isValid()) {
+                event.start!.date = parsedDate.format("YYYY-MM-DD");
+                event.end!.date = parsedDate.add(1, "day").format("YYYY-MM-DD");
+            }
+        }
+
+        const res = await this.calendarClient.events.insert({
+            calendarId: process.env.GOOGLE_CALENDAR_ID,
+            requestBody: event
+        })
     }
 }
