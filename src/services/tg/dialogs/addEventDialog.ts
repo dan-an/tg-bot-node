@@ -3,6 +3,7 @@ import { TelegramBot } from '@/types/telegram';
 import { sendMessage } from '@/services/tg/tools';
 import { EventEmitter } from 'events';
 import { config } from 'dotenv';
+import { googleInstance } from '@/app';
 
 
 config();
@@ -13,8 +14,8 @@ export class AddEventDialog extends EventEmitter {
     eventType: keyof typeof event_types = 'NONE';
 
     public async handleNewMessage(message: TelegramBot.Message) {
-        const messageText = message?.text?.toLowerCase()?.trim() ?? '';
-        this.chatId = message?.chat?.id.toString();
+        const messageText = message.text?.trim() ?? '';
+        this.chatId = message.chat?.id.toString();
         this.isReplyToBot =
             message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
@@ -29,7 +30,6 @@ export class AddEventDialog extends EventEmitter {
                 inline_keyboard: (Object.entries(event_types) as string[][]).reduce<{
                     text: string, callback_data: string
                 }[][]>((keyboard, eventType: string[]) => {
-                    console.log('eventType', eventType);
                     if (!keyboard.length || keyboard.at(-1)!.length === 2) {
                         keyboard.push([]);
                     }
@@ -73,8 +73,6 @@ export class AddEventDialog extends EventEmitter {
 
             const parsedPayload = JSON.parse(payload.data);
 
-            console.log('parsedPayload', parsedPayload);
-
             if (parsedPayload.data) {
                 this.eventType = parsedPayload.data;
 
@@ -91,8 +89,8 @@ export class AddEventDialog extends EventEmitter {
 
     private async handleAddEvent(eventContext: string) {
         const eventContextWithType = `${event_types[this.eventType]}. ${eventContext}`;
-        console.log('eventContextWithType', eventContextWithType);
 
-        // await googleInstance.addEvent(eventContext)
+        await googleInstance.addEvent(eventContextWithType)
+        this.emit('dialog is over');
     }
 }
