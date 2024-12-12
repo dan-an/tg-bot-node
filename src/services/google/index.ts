@@ -1,16 +1,19 @@
-import {GoogleSpreadsheet} from "google-spreadsheet";
-import {config} from "dotenv";
-import {JWT} from "google-auth-library";
-import {calendar, calendar_v3} from "@googleapis/calendar";
-import {EventsMap} from "@/types";
-import dayjs from "dayjs";
+import { GoogleSpreadsheet } from 'google-spreadsheet';
+import { config } from 'dotenv';
+import { JWT } from 'google-auth-library';
+import { calendar, calendar_v3 } from '@googleapis/calendar';
+import { EventsMap } from '@/types';
+import dayjs from 'dayjs';
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
-config()
+dayjs.extend(customParseFormat);
+
+config();
 
 export class GoogleInstance {
     private serviceAccountAuth: JWT = new JWT();
     private doc: GoogleSpreadsheet = null as unknown as GoogleSpreadsheet;
-    private calendarClient: calendar_v3.Calendar = null as unknown as calendar_v3.Calendar
+    private calendarClient: calendar_v3.Calendar = null as unknown as calendar_v3.Calendar;
     private birthdayEvents: EventsMap = {
         today: [],
         tomorrow: [],
@@ -19,45 +22,61 @@ export class GoogleInstance {
         inTwoWeeks: [],
         inThreeWeeks: [],
     };
+
+    static async create() {
+        const o = new GoogleInstance();
+        await o.init();
+        return o;
+    }
+
     async init() {
         this.serviceAccountAuth = new JWT({
             email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
+            key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
             scopes: [
                 'https://www.googleapis.com/auth/spreadsheets',
                 'https://www.googleapis.com/auth/calendar',
             ],
         });
 
-        this.doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, this.serviceAccountAuth)
-        this.calendarClient = calendar({version: 'v3', auth: this.serviceAccountAuth, })
+        this.doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, this.serviceAccountAuth);
+        this.calendarClient = calendar({ version: 'v3', auth: this.serviceAccountAuth });
 
-        await this.doc.loadInfo()
+        await this.doc.loadInfo();
     }
 
     public async addRow(worksheetId: number, values: string[]) {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        await worksheet.addRow(values)
+        const worksheet = this.doc.sheetsById[worksheetId];
+        await worksheet.addRow(values);
     }
 
     public async addRows(worksheetId: number, values: string[][]) {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        await worksheet.addRows(values)
+        const worksheet = this.doc.sheetsById[worksheetId];
+        await worksheet.addRows(values);
     }
 
-    public async getRows(worksheetId: number, column: string = "Категория", filterValue: string = 'продукты') {
-        const worksheet = this.doc.sheetsById[worksheetId]
-        const rows = await worksheet.getRows()
-        const formattedRows = rows.map(row => row.toObject())
-        let filteredRows = JSON.parse(JSON.stringify(formattedRows))
+    public async getRows(worksheetId: number, column: string = 'Категория', filterValue: string = 'продукты') {
+        const worksheet = this.doc.sheetsById[worksheetId];
+        const rows = await worksheet.getRows();
+        const formattedRows = rows.map(row => row.toObject());
+        let filteredRows = JSON.parse(JSON.stringify(formattedRows));
         if (column && filterValue) {
-            filteredRows = formattedRows.filter(row => row[column] === filterValue)
+            filteredRows = formattedRows.filter(row => row[column] === filterValue);
         }
 
-        return filteredRows
+        return filteredRows;
     }
 
     public async fetchBirthdayEvents() {
+        this.birthdayEvents = {
+            today: [],
+            tomorrow: [],
+            inThreeDays: [],
+            inOneWeek: [],
+            inTwoWeeks: [],
+            inThreeWeeks: [],
+        };
+
         const now = dayjs().startOf('day');
         const threeWeeksFromNow = dayjs().add(3, 'week');
 
@@ -66,11 +85,11 @@ export class GoogleInstance {
             q: 'день рождения',
             timeMin: now.toISOString(),
             timeMax: threeWeeksFromNow.toISOString(),
-        })
+        });
         const extractName = (summary: string): string => {
             const match = summary.match(/День рождения\.\s*(.+)/i);
             return match ? match[1] : 'Неизвестное имя';
-        }
+        };
 
         const events = res.data.items || [];
         const tomorrow = now.add(1, 'day');
@@ -79,7 +98,9 @@ export class GoogleInstance {
         const inTwoWeeks = now.add(2, 'week');
         const inThreeWeeks = now.add(3, 'week');
 
-        events.reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
+        events
+            .filter(event => event.status !== "cancelled")
+            .reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
             const eventDate = dayjs(event.start?.dateTime || event.start?.date);
             const formattedDate = eventDate.format('DD.MM.YYYY');
             const name = extractName(event.summary || '');
@@ -116,9 +137,41 @@ export class GoogleInstance {
         return this.birthdayEvents;
     }
 
-    static async create() {
-        const o = new GoogleInstance();
-        await o.init();
-        return o;
+    public async addEvent(eventContext: string) {
+        const event: calendar_v3.Schema$Event = {
+            summary: '',
+            start: {
+                date: '',
+            },
+            end: {
+                date: '',
+            },
+            recurrence: ['RRULE:FREQ=YEARLY;INTERVAL=1']
+        }
+
+        const dateRegex = /\b(\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?)\b/;
+        const match = eventContext.match(dateRegex);
+        const currentYear = dayjs().year();
+
+        if (match) {
+            let rawDate = match[1]; // Найденная дата
+            event.summary = eventContext.replace(rawDate, "").trim(); // Остальной текст
+
+            const dateParts = rawDate.split(/[-./]/);
+            if (dateParts.length === 2) {
+                rawDate += `.${currentYear}`;
+            }
+
+            const parsedDate = dayjs(rawDate, "DD.MM.YYYY");
+            if (parsedDate.isValid()) {
+                event.start!.date = parsedDate.format("YYYY-MM-DD");
+                event.end!.date = parsedDate.add(1, "day").format("YYYY-MM-DD");
+            }
+        }
+
+        const res = await this.calendarClient.events.insert({
+            calendarId: process.env.GOOGLE_CALENDAR_ID,
+            requestBody: event
+        })
     }
 }
