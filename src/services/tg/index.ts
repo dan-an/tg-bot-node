@@ -5,14 +5,10 @@ import { ShoppingDialog } from '@/services/tg/dialogs/shoppingDialog';
 import { WhatToBuyDialog } from '@/services/tg/dialogs/whatToBuyDialog';
 import { AddEventDialog } from '@/services/tg/dialogs/addEventDialog';
 import { sendMessage } from '@/services/tg/tools';
+import { DialogInstance } from '@/types';
+import { DialogFactory } from '@/services/tg/tools/dialogFactory';
 
 config();
-
-type DialogInstance = {
-    handleNewMessage: (message: TelegramBot.Message) => Promise<void>;
-    handleCallbackQuery?: (payload: TelegramBot.CallbackQuery) => Promise<void>;
-    on: (event: string, callback: () => void) => void;
-};
 
 const dialogs: Record<string, new () => DialogInstance> = {
     SaveFilmDialog,
@@ -25,7 +21,7 @@ export class TelegramController {
     hasNeededMeta = false;
     messageMeta: TelegramBot.MessageEntity | null = null;
     isReplyToBot = false;
-    activeDialog: any = null;
+    activeDialog: DialogInstance | null = null;
 
     public async handleNewMessage(message: TelegramBot.Message) {
         this.messageMeta = message && message.entities ? message.entities[0] : null;
@@ -79,5 +75,26 @@ export class TelegramController {
         this.activeDialog.on('dialog is over', () => {
             this.activeDialog = null;
         });
+    }
+
+    private extractCommand(messageText: string): string {
+        const botName = process.env.TELEGRAM_BOT_NAME!;
+        const regex = new RegExp(`@${botName}|/`, 'g');
+        return messageText.replace(regex, '').trim();
+    }
+
+    private updateMessageMeta(message: TelegramBot.Message) {
+        const firstEntity = message?.entities?.[0];
+        this.messageMeta = firstEntity || null;
+
+        this.hasNeededMeta =
+            !!this.messageMeta &&
+            (this.messageMeta.type === 'bot_command' ||
+                (this.messageMeta.type === 'mention' &&
+                    message?.text?.toLowerCase()?.includes(process.env.TELEGRAM_BOT_NAME!)));
+
+        this.isReplyToBot =
+            message.reply_to_message?.from?.username?.toLowerCase() ===
+            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
     }
 }

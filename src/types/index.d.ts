@@ -1,3 +1,5 @@
+import { TelegramBot } from '@/types/telegram';
+
 export class HttpError extends Error {
     statusCode: number;
 
@@ -20,3 +22,11 @@ export interface ProcessedEvent {
 export interface EventsMap {
     [key: string]: Array<ProcessedEvent>;
 }
+
+export type DialogInstance = {
+    handleNewMessage: (message: TelegramBot.Message) => Promise<void>;
+    handleCallbackQuery?: (payload: TelegramBot.CallbackQuery) => Promise<void>;
+    on: (event: string, callback: () => void) => void;
+};
+
+export type DialogConstructor = new () => DialogInstance;
