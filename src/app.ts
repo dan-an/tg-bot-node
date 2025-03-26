@@ -28,29 +28,31 @@ const executeTask = async () => {
     await googleInstance.fetchBirthdayEvents();
     const text = generateBirthdayMessage(googleInstance.getBirthdayEvents());
 
-    const message: TelegramBot.SendMessageParams = {
-        chat_id: process.env.TELEGRAM_MAIN_CHAT_ID!,
-        text,
-    };
+    if (text.length !== 0) {
+        const message: TelegramBot.SendMessageParams = {
+            chat_id: process.env.TELEGRAM_MAIN_CHAT_ID!,
+            text,
+        };
 
-    await telegramControllerInstance.sendMessage(message);
+        await telegramControllerInstance.sendMessage(message);
+    }
 };
 
 const startScheduler = async () => {
     while (true) {
         const now = dayjs().tz('Europe/Moscow');
 
-        if (now.hour() === 8 && now.minute() === 0) {
+        if (now.hour() === 8 && now.minute() === 30) {
             try {
                 await executeTask();
             } catch (error) {
                 console.error(`[TASK] Ошибка выполнения задачи:`, error);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+            await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
         }
 
-        await new Promise(resolve => setTimeout(resolve, 60 * 1000));
+        await new Promise((resolve) => setTimeout(resolve, 60 * 1000));
     }
 };
 

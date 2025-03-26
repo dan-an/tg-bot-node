@@ -17,9 +17,11 @@ export const generateBirthdayMessage = (data: EventsMap): string => {
     let message = '🎉 Напоминаю о ближайших днях рождения:\n\n';
 
     for (const [title, events] of Object.entries(sections)) {
-        if (events.length > 0) {
+        if (events.length === 0) {
+            message = '';
+        } else {
             message += `${title}:\n`;
-            events.forEach(event => {
+            events.forEach((event) => {
                 message += `- ${event.date} ${event.summary}\n`;
             });
             message += '\n'; // Добавляем пустую строку между секциями
