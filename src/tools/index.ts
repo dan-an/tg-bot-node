@@ -6,8 +6,8 @@ export const chooseRandomElement = (arr: any[]) => {
 
 export const generateBirthdayMessage = (data: EventsMap): string => {
     const sections: { [key: string]: ProcessedEvent[] } = {
-        Сегодня: data.today,
-        Завтра: data.tomorrow,
+        'Сегодня': data.today,
+        'Завтра': data.tomorrow,
         'В ближайшие три дня': data.inThreeDays,
         'В ближайшую неделю': data.inOneWeek,
         'В ближайшие две недели': data.inTwoWeeks,
