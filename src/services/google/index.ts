@@ -4,7 +4,7 @@ import { JWT } from 'google-auth-library';
 import { calendar, calendar_v3 } from '@googleapis/calendar';
 import { EventsMap } from '@/types';
 import dayjs from 'dayjs';
-import customParseFormat from "dayjs/plugin/customParseFormat";
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 dayjs.extend(customParseFormat);
 
@@ -33,10 +33,7 @@ export class GoogleInstance {
         this.serviceAccountAuth = new JWT({
             email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
             key: process.env.GOOGLE_PRIVATE_KEY!.replace(/\\n/g, '\n'),
-            scopes: [
-                'https://www.googleapis.com/auth/spreadsheets',
-                'https://www.googleapis.com/auth/calendar',
-            ],
+            scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/calendar'],
         });
 
         this.doc = new GoogleSpreadsheet(process.env.GOOGLE_FILM_LIST_ID!, this.serviceAccountAuth);
@@ -58,13 +55,24 @@ export class GoogleInstance {
     public async getRows(worksheetId: number, column: string = 'Категория', filterValue: string = 'продукты') {
         const worksheet = this.doc.sheetsById[worksheetId];
         const rows = await worksheet.getRows();
-        const formattedRows = rows.map(row => row.toObject());
+        const formattedRows = rows.map((row) => row.toObject());
         let filteredRows = JSON.parse(JSON.stringify(formattedRows));
         if (column && filterValue) {
-            filteredRows = formattedRows.filter(row => row[column] === filterValue);
+            filteredRows = formattedRows.filter((row) => row[column] === filterValue);
         }
 
         return filteredRows;
+    }
+
+    public async deleteRow(worksheetId: number, rowNumber: number): Promise<void> {
+        const worksheet = this.doc.sheetsById[worksheetId];
+        const rows = await worksheet.getRows();
+
+        if (rowNumber >= 2 && rowNumber <= rows.length + 1) {
+            await rows[rowNumber - 2].delete();
+        } else {
+            throw new Error(`Строка ${rowNumber} не найдена.`);
+        }
     }
 
     public async fetchBirthdayEvents() {
@@ -99,29 +107,29 @@ export class GoogleInstance {
         const inThreeWeeks = now.add(3, 'week');
 
         events
-            .filter(event => event.status !== "cancelled")
+            .filter((event) => event.status !== 'cancelled')
             .reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
-            const eventDate = dayjs(event.start?.dateTime || event.start?.date);
-            const formattedDate = eventDate.format('DD.MM.YYYY');
-            const name = extractName(event.summary || '');
-            const transformedEvent = { summary: name, date: formattedDate };
+                const eventDate = dayjs(event.start?.dateTime || event.start?.date);
+                const formattedDate = eventDate.format('DD.MM.YYYY');
+                const name = extractName(event.summary || '');
+                const transformedEvent = { summary: name, date: formattedDate };
 
-            if (eventDate.isSame(now, 'day')) {
-                acc.today.push(transformedEvent);
-            } else if (eventDate.isSame(tomorrow, 'day')) {
-                acc.tomorrow.push(transformedEvent);
-            } else if (eventDate.isBefore(inThreeDays, 'day')) {
-                acc.inThreeDays.push(transformedEvent);
-            } else if (eventDate.isBefore(inOneWeek, 'day')) {
-                acc.inOneWeek.push(transformedEvent);
-            } else if (eventDate.isBefore(inTwoWeeks, 'day')) {
-                acc.inTwoWeeks.push(transformedEvent);
-            } else if (eventDate.isBefore(inThreeWeeks, 'day')) {
-                acc.inThreeWeeks.push(transformedEvent);
-            }
+                if (eventDate.isSame(now, 'day')) {
+                    acc.today.push(transformedEvent);
+                } else if (eventDate.isSame(tomorrow, 'day')) {
+                    acc.tomorrow.push(transformedEvent);
+                } else if (eventDate.isBefore(inThreeDays, 'day')) {
+                    acc.inThreeDays.push(transformedEvent);
+                } else if (eventDate.isBefore(inOneWeek, 'day')) {
+                    acc.inOneWeek.push(transformedEvent);
+                } else if (eventDate.isBefore(inTwoWeeks, 'day')) {
+                    acc.inTwoWeeks.push(transformedEvent);
+                } else if (eventDate.isBefore(inThreeWeeks, 'day')) {
+                    acc.inThreeWeeks.push(transformedEvent);
+                }
 
-            return acc;
-        }, this.birthdayEvents);
+                return acc;
+            }, this.birthdayEvents);
     }
 
     public getBirthdayEvents(period?: string): EventsMap {
@@ -146,8 +154,8 @@ export class GoogleInstance {
             end: {
                 date: '',
             },
-            recurrence: ['RRULE:FREQ=YEARLY;INTERVAL=1']
-        }
+            recurrence: ['RRULE:FREQ=YEARLY;INTERVAL=1'],
+        };
 
         const dateRegex = /\b(\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?)\b/;
         const match = eventContext.match(dateRegex);
@@ -155,23 +163,23 @@ export class GoogleInstance {
 
         if (match) {
             let rawDate = match[1]; // Найденная дата
-            event.summary = eventContext.replace(rawDate, "").trim(); // Остальной текст
+            event.summary = eventContext.replace(rawDate, '').trim(); // Остальной текст
 
             const dateParts = rawDate.split(/[-./]/);
             if (dateParts.length === 2) {
                 rawDate += `.${currentYear}`;
             }
 
-            const parsedDate = dayjs(rawDate, "DD.MM.YYYY");
+            const parsedDate = dayjs(rawDate, 'DD.MM.YYYY');
             if (parsedDate.isValid()) {
-                event.start!.date = parsedDate.format("YYYY-MM-DD");
-                event.end!.date = parsedDate.add(1, "day").format("YYYY-MM-DD");
+                event.start!.date = parsedDate.format('YYYY-MM-DD');
+                event.end!.date = parsedDate.add(1, 'day').format('YYYY-MM-DD');
             }
         }
 
         const res = await this.calendarClient.events.insert({
             calendarId: process.env.GOOGLE_CALENDAR_ID,
-            requestBody: event
-        })
+            requestBody: event,
+        });
     }
 }

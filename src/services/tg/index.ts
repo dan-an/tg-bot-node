@@ -35,7 +35,8 @@ export class TelegramController {
                 (this.messageMeta.type === 'mention' &&
                     !!message?.text?.toLowerCase()?.trim()?.includes(process.env.TELEGRAM_BOT_NAME!)));
         this.isReplyToBot =
-            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
+            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
         const messageText = message?.text?.toLowerCase()?.trim();
         const chatId = message?.chat?.id;
@@ -69,13 +70,13 @@ export class TelegramController {
     }
 
     private setActiveDialog(dialogName: string) {
-        const key = Object.keys(dialogs).filter(key => key.toLowerCase().includes(dialogName))[0]
+        const key = Object.keys(dialogs).filter((key) => key.toLowerCase().includes(dialogName))[0];
 
-        if(!key) {
-            return
+        if (!key) {
+            return;
         }
 
-        this.activeDialog = new dialogs[key]()
+        this.activeDialog = new dialogs[key]();
         this.activeDialog.on('dialog is over', () => {
             this.activeDialog = null;
         });
