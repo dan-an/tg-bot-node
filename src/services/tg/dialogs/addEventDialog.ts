@@ -5,7 +5,6 @@ import { EventEmitter } from 'events';
 import { config } from 'dotenv';
 import { googleInstance } from '@/app';
 
-
 config();
 
 export class AddEventDialog extends EventEmitter {
@@ -17,7 +16,8 @@ export class AddEventDialog extends EventEmitter {
         const messageText = message.text?.trim() ?? '';
         this.chatId = message.chat?.id.toString();
         this.isReplyToBot =
-            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
+            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
         const reply: TelegramBot.SendMessageParams = {
             chat_id: this.chatId,
@@ -27,9 +27,12 @@ export class AddEventDialog extends EventEmitter {
 
         if (!this.isReplyToBot) {
             const keyboard: TelegramBot.InlineKeyboardMarkup = {
-                inline_keyboard: (Object.entries(event_types) as string[][]).reduce<{
-                    text: string, callback_data: string
-                }[][]>((keyboard, eventType: string[]) => {
+                inline_keyboard: (Object.entries(event_types) as string[][]).reduce<
+                    {
+                        text: string;
+                        callback_data: string;
+                    }[][]
+                >((keyboard, eventType: string[]) => {
                     if (!keyboard.length || keyboard.at(-1)!.length === 2) {
                         keyboard.push([]);
                     }
@@ -88,9 +91,18 @@ export class AddEventDialog extends EventEmitter {
     }
 
     private async handleAddEvent(eventContext: string) {
-        const eventContextWithType = `${event_types[this.eventType]}. ${eventContext}`;
-
-        await googleInstance.addEvent(eventContextWithType)
+        const entries = this.parseInputLines(eventContext);
+        for (const line of entries) {
+            const lineWithType = `${event_types[this.eventType]}. ${line}`;
+            await googleInstance.addEvent(lineWithType);
+        }
         this.emit('dialog is over');
+    }
+
+    private parseInputLines(input: string): string[] {
+        return input
+            .split(/[\n,;]+/)
+            .map((line) => line.trim())
+            .filter(Boolean);
     }
 }
