@@ -5,7 +5,7 @@ import { TelegramBot } from '@/types/telegram';
 
 const NewMessage: FastifyPluginAsync = async (server) => {
     server.post('/new-message', async (request, reply) => {
-        const { message, callback_query } = (request.body as TelegramBot.Update);
+        const { message, callback_query } = request.body as TelegramBot.Update;
 
         try {
             if (!!message) {
