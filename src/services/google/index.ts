@@ -157,28 +157,49 @@ export class GoogleInstance {
             recurrence: ['RRULE:FREQ=YEARLY;INTERVAL=1'],
         };
 
-        const dateRegex = /\b(\d{1,2}[-./]\d{1,2}(?:[-./]\d{2,4})?)\b/;
-        const match = eventContext.match(dateRegex);
+        const supportedFormats = ['DD.MM.YYYY', 'DD.MM', 'YYYY-MM-DD', 'DD/MM/YYYY'];
         const currentYear = dayjs().year();
 
-        if (match) {
-            let rawDate = match[1]; // Найденная дата
-            event.summary = eventContext.replace(rawDate, '').trim(); // Остальной текст
+        let foundDate: dayjs.Dayjs | null = null;
+        let rawDate = '';
 
-            const dateParts = rawDate.split(/[-./]/);
-            if (dateParts.length === 2) {
-                rawDate += `.${currentYear}`;
+        for (const format of supportedFormats) {
+            const match = dayjs(eventContext, format, true);
+            if (match.isValid()) {
+                foundDate = match;
+                rawDate = eventContext; // вся строка — это дата, что неверно
+                break;
             }
 
-            const parsedDate = dayjs(rawDate, 'DD.MM.YYYY');
-            if (parsedDate.isValid()) {
-                event.start!.date = parsedDate.format('YYYY-MM-DD');
-                event.end!.date = parsedDate.add(1, 'day').format('YYYY-MM-DD');
+            // Попробуем найти часть строки, которая может быть датой
+            const dateMatch = eventContext.match(/\d{1,4}[-./]\d{1,2}[-./]?\d{0,4}/);
+            if (dateMatch) {
+                const tryParse = dayjs(dateMatch[0], format, true);
+                if (tryParse.isValid()) {
+                    foundDate = tryParse;
+                    rawDate = dateMatch[0];
+                    break;
+                }
             }
         }
 
-        const res = await this.calendarClient.events.insert({
-            calendarId: process.env.GOOGLE_CALENDAR_ID,
+        if (!foundDate) {
+            throw new Error(
+                '❌ Не удалось распознать дату. Поддерживаются только форматы: DD.MM, DD.MM.YYYY, YYYY-MM-DD, DD/MM/YYYY',
+            );
+        }
+
+        // Если год не указан (DD.MM), подставим текущий
+        if (foundDate.year() < 1000) {
+            foundDate = foundDate.year(currentYear);
+        }
+
+        event.summary = eventContext.replace(rawDate, '').trim();
+        event.start!.date = foundDate.format('YYYY-MM-DD');
+        event.end!.date = foundDate.add(1, 'day').format('YYYY-MM-DD');
+
+        await this.calendarClient.events.insert({
+            calendarId: process.env.GOOGLE_CALENDAR_ID!,
             requestBody: event,
         });
     }
