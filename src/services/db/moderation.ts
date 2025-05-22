@@ -14,6 +14,10 @@ db.exec(`
   )
 `);
 
+interface UserRow {
+    status: string;
+}
+
 /**
  * Возвращает статус пользователя по его Telegram ID.
  *
@@ -21,7 +25,7 @@ db.exec(`
  * @returns Статус ('pending', 'approved', 'rejected') или null, если пользователь не найден
  */
 export const getUserStatus = (telegramId: number): string | null => {
-    const row = db.prepare('SELECT status FROM users WHERE telegram_id = ?').get(telegramId);
+    const row = db.prepare('SELECT status FROM users WHERE telegram_id = ?').get(telegramId) as UserRow | undefined;
     return row?.status ?? null;
 };
 
