@@ -1,19 +1,26 @@
+/**
+ * Основной контроллер Telegram-бота.
+ *
+ * Отвечает за:
+ * - маршрутизацию входящих сообщений,
+ * - управление активными диалогами,
+ * - проверку доступа новых пользователей (модерация),
+ * - обработку callback-запросов от inline-кнопок.
+ */
+
 import { config } from 'dotenv';
 import { TelegramBot } from '@/types/telegram';
 import { SaveFilmDialog } from '@/services/tg/dialogs/saveFilmDialog';
 import { ShoppingDialog } from '@/services/tg/dialogs/shoppingDialog';
 import { WhatToBuyDialog } from '@/services/tg/dialogs/whatToBuyDialog';
 import { AddEventDialog } from '@/services/tg/dialogs/addEventDialog';
-import { editMessage, sendMessage } from '@/services/tg/tools';
+import { editMessage, sendMessage, checkAccess } from '@/services/tg/tools';
+import { approveUser, rejectUser } from '@/services/db/moderation';
 
 config();
 
 /**
- * Интерфейс, описывающий поведение диалогов.
- * Каждый диалог должен уметь:
- * - Обрабатывать новые сообщения
- * - (Опционально) обрабатывать callbackQuery
- * - Эмитить события, такие как "dialog is over"
+ * Интерфейс, описывающий поведение диалога.
  */
 type DialogInstance = {
     handleNewMessage: (message: TelegramBot.Message) => Promise<void>;
@@ -21,7 +28,9 @@ type DialogInstance = {
     on: (event: string, callback: () => void) => void;
 };
 
-// Карта всех доступных диалогов по их ключам (названиям команд)
+/**
+ * Доступные диалоги, подключаемые по командам.
+ */
 const dialogs: Record<string, new () => DialogInstance> = {
     SaveFilmDialog,
     ShoppingDialog,
@@ -29,49 +38,46 @@ const dialogs: Record<string, new () => DialogInstance> = {
     AddEventDialog,
 };
 
-/**
- * Основной контроллер Telegram-бота.
- * Отвечает за маршрутизацию входящих сообщений и callback-запросов,
- * управление активным сценарием, а также отправку сообщений пользователю.
- */
 export class TelegramController {
-    /**
-     * Признак того, что сообщение содержит bot-команду или @упоминание бота.
-     */
-    hasNeededMeta = false;
+    /** Метаданные команды / упоминания в сообщении */
     messageMeta: TelegramBot.MessageEntity | null = null;
-    /**
-     * Признак того, что сообщение — это ответ на сообщение бота.
-     */
-    isReplyToBot = false;
-    activeDialog: any = null;
 
+    /** Признак того, что сообщение содержит команду или @упоминание бота */
+    hasNeededMeta = false;
+
+    /** Признак того, что сообщение — это ответ на сообщение от бота */
+    isReplyToBot = false;
+
+    /** Активный диалог, если он есть */
+    activeDialog: DialogInstance | null = null;
+
+    /**
+     * Обрабатывает новое входящее сообщение от Telegram.
+     * Выполняет:
+     * - проверку авторизации (`checkAccess`);
+     * - маршрутизацию команды в нужный диалог;
+     * - обработку команды `/cancel`.
+     *
+     * @param message Сообщение от пользователя
+     */
     public async handleNewMessage(message: TelegramBot.Message) {
+        if (!(await checkAccess(message))) return;
+
         const messageText = message?.text?.toLowerCase()?.trim();
         const chatId = message?.chat?.id;
-
         if (!messageText || !chatId) return;
 
         const commandEntity = message.entities?.find((e) => e.type === 'bot_command' && e.offset === 0);
         const mentionEntity = message.entities?.find((e) => e.type === 'mention');
 
-        /**
-         * Первая подходящая entity из сообщения: bot_command или mention.
-         */
         this.messageMeta = commandEntity ?? mentionEntity ?? null;
 
-        /**
-         * Признак того, что сообщение содержит bot-команду или @упоминание бота.
-         */
         this.hasNeededMeta =
             !!commandEntity ||
             (!!mentionEntity &&
                 messageText.slice(mentionEntity.offset, mentionEntity.offset + mentionEntity.length) ===
                     `@${process.env.TELEGRAM_BOT_NAME!.toLowerCase()}`);
 
-        /**
-         * Признак того, что сообщение — это ответ на сообщение бота.
-         */
         this.isReplyToBot =
             message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
             process.env.TELEGRAM_BOT_NAME?.toLowerCase();
@@ -79,7 +85,7 @@ export class TelegramController {
         const fullCommand = commandEntity
             ? messageText.slice(commandEntity.offset, commandEntity.offset + commandEntity.length)
             : '';
-        const commandName = fullCommand.split('@')[0]; // "/cancel" — без @botname
+        const commandName = fullCommand.split('@')[0];
 
         if (commandName === '/cancel') {
             if (this.activeDialog) {
@@ -91,11 +97,11 @@ export class TelegramController {
                             [
                                 {
                                     text: 'Да',
-                                    callback_data: JSON.stringify({ type: 'confirmCancel', confirm: true }),
+                                    callback_data: JSON.stringify({ command: 'confirmCancel', confirm: true }),
                                 },
                                 {
                                     text: 'Нет',
-                                    callback_data: JSON.stringify({ type: 'confirmCancel', confirm: false }),
+                                    callback_data: JSON.stringify({ command: 'confirmCancel', confirm: false }),
                                 },
                             ],
                         ],
@@ -112,7 +118,7 @@ export class TelegramController {
                 this.activeDialog = null;
             }
 
-            const botCommandName = commandName.replace('/', '').trim(); // для setActiveDialog
+            const botCommandName = commandName.replace('/', '').trim();
             this.setActiveDialog(botCommandName);
 
             if (this.activeDialog) {
@@ -121,48 +127,87 @@ export class TelegramController {
         }
     }
 
+    /**
+     * Обрабатывает входящий callback-запрос из inline-кнопок.
+     * Включает поддержку:
+     * - подтверждения отмены диалога;
+     * - модерации доступа: одобрение / отклонение.
+     *
+     * @param payload Объект callback_query от Telegram
+     */
     public async handleCallbackQuery(payload: TelegramBot.CallbackQuery) {
         const chatId = payload.message!.chat.id;
         const messageId = payload.message!.message_id;
-
         if (!payload.data) return;
 
-        const parsed = JSON.parse(payload.data);
-
-        // Подтверждение отмены диалога по inline-кнопке
-        if (parsed.type === 'confirmCancel') {
-            if (parsed.confirm) {
-                this.activeDialog = null;
-                await editMessage(messageId, {
-                    chat_id: chatId,
-                    text: 'Диалог отменён. Можем начать заново.',
-                });
-            } else {
-                await editMessage(messageId, {
-                    chat_id: chatId,
-                    text: 'Окей, продолжаем текущий диалог.',
-                });
-            }
-            return; // завершить обработку callback
+        let parsed: { command?: string; user_id?: string; [key: string]: any };
+        try {
+            parsed = JSON.parse(payload.data);
+        } catch {
+            return;
         }
 
-        if (this.activeDialog) {
-            await this.activeDialog.handleCallbackQuery(payload);
+        switch (parsed.command) {
+            case 'approve': {
+                const userId = Number(parsed.user_id);
+                approveUser(userId);
+                await sendMessage({ chat_id: userId, text: '✅ Вы были одобрены. Добро пожаловать!' });
+                await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} одобрен.` });
+                break;
+            }
+
+            case 'reject': {
+                const userId = Number(parsed.user_id);
+                rejectUser(userId);
+                await sendMessage({ chat_id: userId, text: '🚫 В доступе отказано.' });
+                await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} отклонён.` });
+                break;
+            }
+
+            case 'confirmCancel': {
+                if (parsed.confirm) {
+                    this.activeDialog = null;
+                    await editMessage(messageId, {
+                        chat_id: chatId,
+                        text: 'Диалог отменён. Можем начать заново.',
+                    });
+                } else {
+                    await editMessage(messageId, {
+                        chat_id: chatId,
+                        text: 'Окей, продолжаем текущий диалог.',
+                    });
+                }
+                break;
+            }
+
+            default: {
+                if (this.activeDialog) {
+                    await this.activeDialog.handleCallbackQuery?.(payload);
+                }
+            }
         }
     }
 
+    /**
+     * Обёртка для отправки сообщения пользователю.
+     *
+     * @param message параметры для Telegram API
+     */
     public async sendMessage(message: TelegramBot.SendMessageParams) {
         await sendMessage(message);
     }
 
+    /**
+     * Активирует диалог по имени команды.
+     * Поддерживает `on("dialog is over")` для сброса текущего диалога.
+     *
+     * @param dialogName Название команды (без "/")
+     */
     private setActiveDialog(dialogName: string) {
         const key = Object.keys(dialogs).filter((key) => key.toLowerCase().includes(dialogName))[0];
 
-        if (!key) {
-            return;
-        }
+        if (!key) return;
 
-        // Создаём новый экземпляр диалога и подписываемся на событие завершения
         this.activeDialog = new dialogs[key]();
         this.activeDialog.on('dialog is over', () => {
             this.activeDialog = null;
