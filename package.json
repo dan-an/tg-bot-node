@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@googleapis/calendar": "^9.7.9",
+    "@types/bun": "^1.2.14",
     "bree": "^9.2.4",
     "dayjs": "^1.11.13",
     "fastify": "^5.1.0",
