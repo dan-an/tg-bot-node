@@ -1,3 +1,13 @@
+/**
+ * Основной контроллер Telegram-бота.
+ *
+ * Отвечает за:
+ * - маршрутизацию входящих сообщений,
+ * - управление активными диалогами,
+ * - проверку доступа новых пользователей (модерация),
+ * - обработку callback-запросов от inline-кнопок.
+ */
+
 import { config } from 'dotenv';
 import { TelegramBot } from '@/types/telegram';
 import { SaveFilmDialog } from '@/services/tg/dialogs/saveFilmDialog';
@@ -10,7 +20,7 @@ import { approveUser, rejectUser } from '@/services/db/moderation';
 config();
 
 /**
- * Интерфейс, описывающий поведение диалогов.
+ * Интерфейс, описывающий поведение диалога.
  */
 type DialogInstance = {
     handleNewMessage: (message: TelegramBot.Message) => Promise<void>;
@@ -18,6 +28,9 @@ type DialogInstance = {
     on: (event: string, callback: () => void) => void;
 };
 
+/**
+ * Доступные диалоги, подключаемые по командам.
+ */
 const dialogs: Record<string, new () => DialogInstance> = {
     SaveFilmDialog,
     ShoppingDialog,
@@ -26,11 +39,27 @@ const dialogs: Record<string, new () => DialogInstance> = {
 };
 
 export class TelegramController {
-    hasNeededMeta = false;
+    /** Метаданные команды / упоминания в сообщении */
     messageMeta: TelegramBot.MessageEntity | null = null;
-    isReplyToBot = false;
-    activeDialog: any = null;
 
+    /** Признак того, что сообщение содержит команду или @упоминание бота */
+    hasNeededMeta = false;
+
+    /** Признак того, что сообщение — это ответ на сообщение от бота */
+    isReplyToBot = false;
+
+    /** Активный диалог, если он есть */
+    activeDialog: DialogInstance | null = null;
+
+    /**
+     * Обрабатывает новое входящее сообщение от Telegram.
+     * Выполняет:
+     * - проверку авторизации (`checkAccess`);
+     * - маршрутизацию команды в нужный диалог;
+     * - обработку команды `/cancel`.
+     *
+     * @param message Сообщение от пользователя
+     */
     public async handleNewMessage(message: TelegramBot.Message) {
         if (!(await checkAccess(message))) return;
 
@@ -98,6 +127,14 @@ export class TelegramController {
         }
     }
 
+    /**
+     * Обрабатывает входящий callback-запрос из inline-кнопок.
+     * Включает поддержку:
+     * - подтверждения отмены диалога;
+     * - модерации доступа: одобрение / отклонение.
+     *
+     * @param payload Объект callback_query от Telegram
+     */
     public async handleCallbackQuery(payload: TelegramBot.CallbackQuery) {
         const chatId = payload.message!.chat.id;
         const messageId = payload.message!.message_id;
@@ -145,16 +182,27 @@ export class TelegramController {
 
             default: {
                 if (this.activeDialog) {
-                    await this.activeDialog.handleCallbackQuery(payload);
+                    await this.activeDialog.handleCallbackQuery?.(payload);
                 }
             }
         }
     }
 
+    /**
+     * Обёртка для отправки сообщения пользователю.
+     *
+     * @param message параметры для Telegram API
+     */
     public async sendMessage(message: TelegramBot.SendMessageParams) {
         await sendMessage(message);
     }
 
+    /**
+     * Активирует диалог по имени команды.
+     * Поддерживает `on("dialog is over")` для сброса текущего диалога.
+     *
+     * @param dialogName Название команды (без "/")
+     */
     private setActiveDialog(dialogName: string) {
         const key = Object.keys(dialogs).filter((key) => key.toLowerCase().includes(dialogName))[0];
 
