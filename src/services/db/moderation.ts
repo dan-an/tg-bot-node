@@ -1,38 +1,39 @@
-import Database from 'better-sqlite3';
+import { Database } from 'bun:sqlite';
 
 const DB_PATH = process.env.DB_PATH || './moderation.sqlite';
 const db = new Database(DB_PATH);
 
-// Создаёт таблицу users при первом запуске, если она ещё не существует
-db.exec(`
+/**
+ * Инициализация таблицы пользователей.
+ */
+db.run(`
   CREATE TABLE IF NOT EXISTS users (
     telegram_id INTEGER PRIMARY KEY,
     first_name TEXT,
     username TEXT,
     status TEXT NOT NULL CHECK(status IN ('pending', 'approved', 'rejected')),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
+  );
 `);
 
-interface UserRow {
-    status: string;
-}
-
 /**
- * Возвращает статус пользователя по его Telegram ID.
+ * Получает статус пользователя по telegram_id.
  *
- * @param telegramId - ID пользователя из Telegram
- * @returns Статус ('pending', 'approved', 'rejected') или null, если пользователь не найден
+ * @param telegramId - Telegram ID пользователя
+ * @returns Статус ('approved', 'pending', 'rejected') или null
  */
 export const getUserStatus = (telegramId: number): string | null => {
-    const row = db.prepare('SELECT status FROM users WHERE telegram_id = ?').get(telegramId) as UserRow | undefined;
+    const row = db.prepare('SELECT status FROM users WHERE telegram_id = ?').get(telegramId) as
+        | { status: string }
+        | undefined;
+
     return row?.status ?? null;
 };
 
 /**
- * Добавляет нового пользователя в статусе 'pending'.
+ * Добавляет пользователя в базу со статусом 'pending'.
  *
- * @param user - Объект пользователя с ID, именем и (опционально) username
+ * @param user - Объект Telegram пользователя
  */
 export const addPendingUser = (user: { id: number; first_name: string; username?: string }) => {
     db.prepare(
@@ -46,7 +47,7 @@ export const addPendingUser = (user: { id: number; first_name: string; username?
 /**
  * Обновляет статус пользователя на 'approved'.
  *
- * @param telegramId - ID пользователя, которого нужно одобрить
+ * @param telegramId - Telegram ID пользователя
  */
 export const approveUser = (telegramId: number) => {
     db.prepare('UPDATE users SET status = ? WHERE telegram_id = ?').run('approved', telegramId);
@@ -55,7 +56,7 @@ export const approveUser = (telegramId: number) => {
 /**
  * Обновляет статус пользователя на 'rejected'.
  *
- * @param telegramId - ID пользователя, которому нужно отказать
+ * @param telegramId - Telegram ID пользователя
  */
 export const rejectUser = (telegramId: number) => {
     db.prepare('UPDATE users SET status = ? WHERE telegram_id = ?').run('rejected', telegramId);
