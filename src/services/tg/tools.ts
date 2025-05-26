@@ -91,8 +91,14 @@ export const checkAccess = async (message: TelegramBot.Message): Promise<boolean
                 reply_markup: {
                     inline_keyboard: [
                         [
-                            { text: '✅ Да', callback_data: `approve_${from.id}` },
-                            { text: '❌ Нет', callback_data: `reject_${from.id}` },
+                            {
+                                text: '✅ Да',
+                                callback_data: JSON.stringify({ command: 'approve', user_id: from.id }),
+                            },
+                            {
+                                text: '❌ Нет',
+                                callback_data: JSON.stringify({ command: 'reject', user_id: from.id }),
+                            },
                         ],
                     ],
                 },

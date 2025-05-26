@@ -68,11 +68,11 @@ export class TelegramController {
                             [
                                 {
                                     text: 'Да',
-                                    callback_data: JSON.stringify({ type: 'confirmCancel', confirm: true }),
+                                    callback_data: JSON.stringify({ command: 'confirmCancel', confirm: true }),
                                 },
                                 {
                                     text: 'Нет',
-                                    callback_data: JSON.stringify({ type: 'confirmCancel', confirm: false }),
+                                    callback_data: JSON.stringify({ command: 'confirmCancel', confirm: false }),
                                 },
                             ],
                         ],
@@ -89,7 +89,7 @@ export class TelegramController {
                 this.activeDialog = null;
             }
 
-            const botCommandName = commandName.replace('/', '').trim(); // для setActiveDialog
+            const botCommandName = commandName.replace('/', '').trim();
             this.setActiveDialog(botCommandName);
 
             if (this.activeDialog) {
@@ -101,46 +101,53 @@ export class TelegramController {
     public async handleCallbackQuery(payload: TelegramBot.CallbackQuery) {
         const chatId = payload.message!.chat.id;
         const messageId = payload.message!.message_id;
-
         if (!payload.data) return;
 
-        // модерация: одобрение/отклонение
-        if (payload.data.startsWith('approve_')) {
-            const userId = Number(payload.data.split('_')[1]);
-            approveUser(userId);
-            await sendMessage({ chat_id: userId, text: '✅ Вы были одобрены. Добро пожаловать!' });
-            await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} одобрен.` });
+        let parsed: { command?: string; user_id?: string; [key: string]: any };
+        try {
+            parsed = JSON.parse(payload.data);
+        } catch {
             return;
         }
 
-        if (payload.data.startsWith('reject_')) {
-            const userId = Number(payload.data.split('_')[1]);
-            rejectUser(userId);
-            await sendMessage({ chat_id: userId, text: '🚫 В доступе отказано.' });
-            await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} отклонён.` });
-            return;
-        }
-
-        const parsed = JSON.parse(payload.data);
-
-        if (parsed.type === 'confirmCancel') {
-            if (parsed.confirm) {
-                this.activeDialog = null;
-                await editMessage(messageId, {
-                    chat_id: chatId,
-                    text: 'Диалог отменён. Можем начать заново.',
-                });
-            } else {
-                await editMessage(messageId, {
-                    chat_id: chatId,
-                    text: 'Окей, продолжаем текущий диалог.',
-                });
+        switch (parsed.command) {
+            case 'approve': {
+                const userId = Number(parsed.user_id);
+                approveUser(userId);
+                await sendMessage({ chat_id: userId, text: '✅ Вы были одобрены. Добро пожаловать!' });
+                await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} одобрен.` });
+                break;
             }
-            return; // завершить обработку callback
-        }
 
-        if (this.activeDialog) {
-            await this.activeDialog.handleCallbackQuery(payload);
+            case 'reject': {
+                const userId = Number(parsed.user_id);
+                rejectUser(userId);
+                await sendMessage({ chat_id: userId, text: '🚫 В доступе отказано.' });
+                await sendMessage({ chat_id: chatId, text: `Пользователь ${userId} отклонён.` });
+                break;
+            }
+
+            case 'confirmCancel': {
+                if (parsed.confirm) {
+                    this.activeDialog = null;
+                    await editMessage(messageId, {
+                        chat_id: chatId,
+                        text: 'Диалог отменён. Можем начать заново.',
+                    });
+                } else {
+                    await editMessage(messageId, {
+                        chat_id: chatId,
+                        text: 'Окей, продолжаем текущий диалог.',
+                    });
+                }
+                break;
+            }
+
+            default: {
+                if (this.activeDialog) {
+                    await this.activeDialog.handleCallbackQuery(payload);
+                }
+            }
         }
     }
 
@@ -151,9 +158,7 @@ export class TelegramController {
     private setActiveDialog(dialogName: string) {
         const key = Object.keys(dialogs).filter((key) => key.toLowerCase().includes(dialogName))[0];
 
-        if (!key) {
-            return;
-        }
+        if (!key) return;
 
         this.activeDialog = new dialogs[key]();
         this.activeDialog.on('dialog is over', () => {
