@@ -86,7 +86,7 @@ export const checkAccess = async (message: TelegramBot.Message): Promise<boolean
             messageToSend.text = '⏳ Ваша заявка на доступ отправлена администратору.';
 
             await sendMessage({
-                chat_id: Number(process.env.ADMIN_ID),
+                chat_id: Number(process.env.TELEGRAM_ADMIN_ID),
                 text: `👤 Новый пользователь:\nИмя: ${from.first_name}\nID: ${from.id}\nUsername: ${from.username ?? '—'}\n\nРазрешить доступ?`,
                 reply_markup: {
                     inline_keyboard: [
