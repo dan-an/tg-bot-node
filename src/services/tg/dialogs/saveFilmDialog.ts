@@ -1,7 +1,8 @@
 import { botReplies, hashtags } from '@/services/tg/dictionary';
 import { googleInstance } from '@/app';
 import { TelegramBot } from '@/types/telegram';
-import { getRandomPhrase, sendMessage } from '@/services/tg/tools';
+import { sendMessage } from '@/services/tg/tools';
+import { getRandomPhrase } from '@/tools';
 import { findFilmByID, findFilmByName } from '@/services/kinopoisk';
 import { EventEmitter } from 'events';
 import { config } from 'dotenv';
@@ -16,7 +17,8 @@ export class SaveFilmDialog extends EventEmitter {
         const messageText = message?.text?.toLowerCase()?.trim() ?? '';
         this.chatId = message?.chat?.id.toString();
         this.isReplyToBot =
-            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
+            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
         const reply: TelegramBot.SendMessageParams = {
             chat_id: this.chatId,
@@ -47,7 +49,11 @@ export class SaveFilmDialog extends EventEmitter {
             const parsedPayload = JSON.parse(payload.data);
 
             const film = await findFilmByID(parsedPayload.data);
-            await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [film.name, `https://www.kinopoisk.ru/film/${film.id}/`, film.id]);
+            await googleInstance.addRow(parseInt(process.env.FILMS_SHEET_ID!), [
+                film.name,
+                `https://www.kinopoisk.ru/film/${film.id}/`,
+                film.id,
+            ]);
 
             reply.text = `Сохранил сюда - https://docs.google.com/spreadsheets/d/${process.env.GOOGLE_FILM_LIST_ID}`;
 
@@ -59,11 +65,13 @@ export class SaveFilmDialog extends EventEmitter {
     private async handleSaveFilm(filmName: string, chatId: string): Promise<void> {
         let films = await findFilmByName(filmName);
 
-        const formattedFilmList = films.map((film: any, index: number) => {
-            const { name, rating, year, shortDescription, id } = film;
-            const kpLink = `https://www.kinopoisk.ru/film/${id}`;
-            return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${shortDescription ? shortDescription : kpLink}`;
-        }).join('\n\n');
+        const formattedFilmList = films
+            .map((film: any, index: number) => {
+                const { name, rating, year, shortDescription, id } = film;
+                const kpLink = `https://www.kinopoisk.ru/film/${id}`;
+                return `<b>${index + 1}. ${name} (${year})</b>\n<i>kp: ${rating.kp}, imdb: ${rating.imdb}</i>\n${shortDescription ? shortDescription : kpLink}`;
+            })
+            .join('\n\n');
 
         const replyText = `<b>Нашлось ${films.length} фильмов:</b>\n\n${formattedFilmList}`;
 
