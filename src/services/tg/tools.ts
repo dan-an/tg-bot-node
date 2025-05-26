@@ -20,16 +20,6 @@ export const sendMessage = async (message: TelegramBot.SendMessageParams): Promi
 };
 
 /**
- * Возвращает случайную строку из списка.
- *
- * @param phraseList - Массив строк, из которых нужно выбрать случайную
- * @returns Одна из строк массива
- */
-export const getRandomPhrase = (phraseList: string[]): string => {
-    return phraseList[Math.floor(Math.random() * phraseList.length)];
-};
-
-/**
  * Редактирует ранее отправленное сообщение через Telegram Bot API.
  *
  * @param messageId - ID сообщения, которое нужно изменить

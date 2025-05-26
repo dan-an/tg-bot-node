@@ -1,7 +1,13 @@
 import { EventsMap, ProcessedEvent } from '@/types';
 
-export const chooseRandomElement = (arr: any[]) => {
-    return arr[Math.floor(Math.random() * arr.length)];
+/**
+ * Возвращает случайную строку из списка.
+ *
+ * @param phraseList - Массив строк, из которых нужно выбрать случайную
+ * @returns Одна из строк массива
+ */
+export const getRandomPhrase = (phraseList: string[]): string => {
+    return phraseList[Math.floor(Math.random() * phraseList.length)];
 };
 
 export const generateBirthdayMessage = (data: EventsMap): string => {
