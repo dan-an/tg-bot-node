@@ -6,7 +6,7 @@ import { EventsMap, ProcessedEvent } from '@/types';
  * @param phraseList - Массив строк, из которых нужно выбрать случайную
  * @returns Одна из строк массива
  */
-export const getRandomPhrase = (phraseList: string[]): string => {
+export const getRandomString = (phraseList: string[]): string => {
     return phraseList[Math.floor(Math.random() * phraseList.length)];
 };
 

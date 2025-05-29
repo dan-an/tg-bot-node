@@ -14,7 +14,8 @@ import { SaveFilmDialog } from '@/services/tg/dialogs/saveFilmDialog';
 import { ShoppingDialog } from '@/services/tg/dialogs/shoppingDialog';
 import { WhatToBuyDialog } from '@/services/tg/dialogs/whatToBuyDialog';
 import { AddEventDialog } from '@/services/tg/dialogs/addEventDialog';
-import { editMessage, sendMessage, checkAccess } from '@/services/tg/tools';
+import { editMessage, resolveMessageMeta, sendMessage } from '@/services/tg/tools';
+import { checkAccess } from '@/services/tg/sqlTools';
 import { approveUser, rejectUser } from '@/services/db/moderation';
 
 config();
@@ -63,28 +64,20 @@ export class TelegramController {
     public async handleNewMessage(message: TelegramBot.Message) {
         if (!(await checkAccess(message))) return;
 
+        const botName = process.env.TELEGRAM_BOT_NAME!.toLowerCase();
         const messageText = message?.text?.toLowerCase()?.trim();
         const chatId = message?.chat?.id;
         if (!messageText || !chatId) return;
 
-        const commandEntity = message.entities?.find((e) => e.type === 'bot_command' && e.offset === 0);
-        const mentionEntity = message.entities?.find((e) => e.type === 'mention');
+        const { meta, isAddressedToBot } = resolveMessageMeta(message, botName);
 
-        this.messageMeta = commandEntity ?? mentionEntity ?? null;
+        this.messageMeta = meta;
+        this.hasNeededMeta = isAddressedToBot;
 
-        this.hasNeededMeta =
-            !!commandEntity ||
-            (!!mentionEntity &&
-                messageText.slice(mentionEntity.offset, mentionEntity.offset + mentionEntity.length) ===
-                    `@${process.env.TELEGRAM_BOT_NAME!.toLowerCase()}`);
+        this.isReplyToBot = message.reply_to_message?.from?.username?.toLowerCase()?.trim() === botName;
 
-        this.isReplyToBot =
-            message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
-            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
-
-        const fullCommand = commandEntity
-            ? messageText.slice(commandEntity.offset, commandEntity.offset + commandEntity.length)
-            : '';
+        const fullCommand =
+            meta?.type === 'bot_command' ? messageText.slice(meta.offset, meta.offset + meta.length) : '';
         const commandName = fullCommand.split('@')[0];
 
         if (commandName === '/cancel') {

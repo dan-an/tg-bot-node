@@ -6,7 +6,6 @@
 
 import { TelegramBot } from '@/types/telegram';
 import axios from 'axios';
-import { getUserStatus, addPendingUser } from '@/services/db/moderation';
 
 const telegramUrl = `https://api.telegram.org/bot${process.env.TELEGRAM_API_TOKEN}`;
 
@@ -40,64 +39,44 @@ export const editMessage = async (messageId: number, params: TelegramBot.SendMes
 };
 
 /**
- * Проверяет статус пользователя и решает, может ли он продолжить работу с ботом.
+ * Извлекает метаинформацию из сообщения Telegram о том, содержит ли оно команду
+ * или упоминание бота, и определяет, адресовано ли сообщение текущему боту.
  *
- * - Если пользователь одобрен (`approved`) — возвращает true.
- * - Если `pending` или `rejected` — отправляет уведомление пользователю.
- * - Если новый — добавляет в базу, уведомляет пользователя и отправляет уведомление администратору.
+ * Функция обрабатывает два типа сущностей в сообщении:
+ * - `bot_command`: команда, начинающаяся с `/`, например `/start`
+ * - `mention`: упоминание в виде `@botname`, например `@my_telegram_bot`
  *
- * @param message - Входящее сообщение от Telegram с полем `from`
- * @returns true — если пользователь одобрен, иначе false
+ * Возвращает объект, содержащий:
+ * - `meta`: сущность команды или упоминания, если она найдена
+ * - `isAddressedToBot`: `true`, если сообщение явно адресовано этому боту
+ *
+ * @param message — Объект сообщения от Telegram с полем `entities` и `text`
+ * @param botName — Имя бота (в нижнем регистре), например `'my_telegram_bot'`
+ *
+ * @returns Объект с полями:
+ * - `meta`: сущность команды или упоминания (`MessageEntity`), либо `null`
+ * - `isAddressedToBot`: `true`, если сообщение содержит команду или
+ *    упоминание текущего бота, иначе `false`
  */
-export const checkAccess = async (message: TelegramBot.Message): Promise<boolean> => {
-    if (!message.from) return false;
-
-    const from = message.from;
-    const status = getUserStatus(from.id);
-
-    const messageToSend: Partial<TelegramBot.SendMessageParams> = {
-        chat_id: from.id,
-    };
-
-    switch (status) {
-        case 'approved':
-            return true;
-
-        case 'rejected':
-            messageToSend.text = '🚫 Доступ к боту запрещён.';
-            break;
-
-        case 'pending':
-            messageToSend.text = '⏳ Ваша заявка на доступ рассматривается.';
-            break;
-
-        default:
-            addPendingUser(from);
-            messageToSend.text = '⏳ Ваша заявка на доступ отправлена администратору.';
-
-            await sendMessage({
-                chat_id: Number(process.env.TELEGRAM_ADMIN_ID),
-                text: `👤 Новый пользователь:\nИмя: ${from.first_name}\nID: ${from.id}\nUsername: ${from.username ?? '—'}\n\nРазрешить доступ?`,
-                reply_markup: {
-                    inline_keyboard: [
-                        [
-                            {
-                                text: '✅ Да',
-                                callback_data: JSON.stringify({ command: 'approve', user_id: from.id }),
-                            },
-                            {
-                                text: '❌ Нет',
-                                callback_data: JSON.stringify({ command: 'reject', user_id: from.id }),
-                            },
-                        ],
-                    ],
-                },
-            });
+export const resolveMessageMeta = (
+    message: TelegramBot.Message,
+    botName: string,
+): {
+    meta: TelegramBot.MessageEntity | null;
+    isAddressedToBot: boolean;
+} => {
+    if (!message.text) {
+        return { meta: null, isAddressedToBot: false };
     }
 
-    if (messageToSend.chat_id && messageToSend.text) {
-        await sendMessage(messageToSend as TelegramBot.SendMessageParams);
-    }
+    const messageText = message.text.toLowerCase().trim();
+    const commandEntity = message.entities?.find((e) => e.type === 'bot_command' && e.offset === 0);
+    const mentionEntity = message.entities?.find((e) => e.type === 'mention');
+    const meta = commandEntity ?? mentionEntity ?? null;
+    const isAddressedToBot =
+        !!commandEntity ||
+        (!!mentionEntity &&
+            messageText.slice(mentionEntity.offset, mentionEntity.offset + mentionEntity.length) === `@${botName}`);
 
-    return false;
+    return { meta, isAddressedToBot };
 };

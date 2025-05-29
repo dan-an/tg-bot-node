@@ -2,7 +2,7 @@ import { botReplies, hashtags } from '@/services/tg/dictionary';
 import { googleInstance } from '@/app';
 import { TelegramBot } from '@/types/telegram';
 import { sendMessage } from '@/services/tg/tools';
-import { getRandomPhrase } from '@/tools';
+import { getRandomString } from '@/tools';
 import { findFilmByID, findFilmByName } from '@/services/kinopoisk';
 import { EventEmitter } from 'events';
 import { config } from 'dotenv';
@@ -27,7 +27,7 @@ export class SaveFilmDialog extends EventEmitter {
         };
 
         if (!this.isReplyToBot) {
-            reply.text = `#${hashtags.FILMS}\n${getRandomPhrase(botReplies.forceUser)}`;
+            reply.text = `#${hashtags.FILMS}\n${getRandomString(botReplies.forceUser)}`;
             await sendMessage(reply);
         } else {
             await this.handleSaveFilm(messageText, this.chatId);
