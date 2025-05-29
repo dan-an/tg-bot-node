@@ -1,10 +1,10 @@
 import { botReplies, categories, hashtags } from '@/services/tg/dictionary';
 import { googleInstance } from '@/app';
 import { TelegramBot } from '@/types/telegram';
-import { getRandomPhrase, sendMessage } from '@/services/tg/tools';
+import { sendMessage } from '@/services/tg/tools';
+import { getRandomString } from '@/tools';
 import { EventEmitter } from 'events';
 import { config } from 'dotenv';
-
 
 config();
 
@@ -17,7 +17,8 @@ export class ShoppingDialog extends EventEmitter {
         const messageText = message?.text?.toLowerCase()?.trim() ?? '';
         this.chatId = message?.chat?.id.toString();
         this.isReplyToBot =
-            message.reply_to_message?.from?.username?.toLowerCase()?.trim() === process.env.TELEGRAM_BOT_NAME?.toLowerCase();
+            message.reply_to_message?.from?.username?.toLowerCase()?.trim() ===
+            process.env.TELEGRAM_BOT_NAME?.toLowerCase();
 
         const reply: TelegramBot.SendMessageParams = {
             chat_id: this.chatId,
@@ -26,14 +27,17 @@ export class ShoppingDialog extends EventEmitter {
         };
 
         if (!this.isReplyToBot) {
-            reply.text = `#${hashtags.SHOPPING}\n${getRandomPhrase(botReplies.forceUser)}`;
+            reply.text = `#${hashtags.SHOPPING}\n${getRandomString(botReplies.forceUser)}`;
             await sendMessage(reply);
         } else {
             this.shoppingList = messageText.split('\n');
             const keyboard: TelegramBot.InlineKeyboardMarkup = {
-                inline_keyboard: (Object.values(categories) as string[]).reduce<{
-                    text: string, callback_data: string
-                }[][]>((keyboard, category: string) => {
+                inline_keyboard: (Object.values(categories) as string[]).reduce<
+                    {
+                        text: string;
+                        callback_data: string;
+                    }[][]
+                >((keyboard, category: string) => {
                     if (!keyboard.length || keyboard.at(-1)!.length === 2) {
                         keyboard.push([]);
                     }
@@ -70,7 +74,7 @@ export class ShoppingDialog extends EventEmitter {
 
             const parsedPayload = JSON.parse(payload.data);
 
-            const rows: string[][] = this.shoppingList.map(item => [item, parsedPayload.data]);
+            const rows: string[][] = this.shoppingList.map((item) => [item, parsedPayload.data]);
 
             await googleInstance.addRows(parseInt(process.env.SHOPPING_SHEET_ID!), rows);
             this.shoppingList = [];
