@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { getRandomString } from '@/tools';
+import { resolveMessageMeta } from '@/services/tg/tools';
+import { regularMessage, emptyMessage, commandMessage, replyMessage } from '../../mocks/tg/message';
 
 describe('getRandomPhrase', () => {
     const phraseList = ['привет', 'здравствуй', 'добрый день'];
@@ -22,5 +24,45 @@ describe('getRandomPhrase', () => {
         }
 
         expect(result.size).toBeGreaterThan(1);
+    });
+});
+
+describe('resolveMessageMeta', () => {
+    it('empty message, to be ignored', () => {
+        const result = resolveMessageMeta(emptyMessage, 'BotName');
+
+        expect(result).toEqual({ meta: null, isAddressedToBot: false });
+    });
+
+    it('regular message, to be ignored', () => {
+        const result = resolveMessageMeta(regularMessage, 'BotName');
+
+        expect(result).toEqual({ meta: null, isAddressedToBot: false });
+    });
+
+    it('command message, should be handled', () => {
+        const result = resolveMessageMeta(commandMessage, 'BotName');
+
+        expect(result).toEqual({
+            meta: {
+                offset: 0,
+                length: 9,
+                type: 'bot_command',
+            },
+            isAddressedToBot: true,
+        });
+    });
+
+    it('reply message, should be handled', () => {
+        const result = resolveMessageMeta(replyMessage, 'BotName');
+
+        expect(result).toEqual({
+            meta: {
+                offset: 0,
+                length: 9,
+                type: 'bot_command',
+            },
+            isAddressedToBot: true,
+        });
     });
 });
