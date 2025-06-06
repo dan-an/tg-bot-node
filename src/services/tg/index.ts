@@ -62,6 +62,8 @@ export class TelegramController {
      * @param message Сообщение от пользователя
      */
     public async handleNewMessage(message: TelegramBot.Message) {
+        console.dir(message, { depth: null });
+
         if (!(await checkAccess(message))) return;
 
         const botName = process.env.TELEGRAM_BOT_NAME!.toLowerCase();
