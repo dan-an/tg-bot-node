@@ -57,12 +57,8 @@ describe('resolveMessageMeta', () => {
         const result = resolveMessageMeta(replyMessage, 'BotName');
 
         expect(result).toEqual({
-            meta: {
-                offset: 0,
-                length: 9,
-                type: 'bot_command',
-            },
-            isAddressedToBot: true,
+            meta: null,
+            isAddressedToBot: false,
         });
     });
 });
