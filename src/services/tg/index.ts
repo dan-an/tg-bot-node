@@ -124,6 +124,8 @@ export class TelegramController {
             if (this.activeDialog) {
                 await this.activeDialog.handleNewMessage(message);
             }
+        } else if (this.activeDialog && this.isReplyToBot) {
+            await this.activeDialog.handleNewMessage(message);
         }
     }
 
