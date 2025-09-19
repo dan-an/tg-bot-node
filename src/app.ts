@@ -42,7 +42,7 @@ const startScheduler = async () => {
     while (true) {
         const now = dayjs().tz('Europe/Moscow');
 
-        if (now.hour() === 13 && now.minute() === 20) {
+        if (now.hour() === 10 && now.minute() === 10) {
             try {
                 await executeTask();
             } catch (error) {
