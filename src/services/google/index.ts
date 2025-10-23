@@ -5,8 +5,14 @@ import { calendar, calendar_v3 } from '@googleapis/calendar';
 import { EventsMap } from '@/types';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const MOSCOW_TIMEZONE = 'Europe/Moscow';
 
 config();
 
@@ -85,8 +91,8 @@ export class GoogleInstance {
             inThreeWeeks: [],
         };
 
-        const now = dayjs().startOf('day');
-        const threeWeeksFromNow = dayjs().add(3, 'week');
+        const now = dayjs().tz(MOSCOW_TIMEZONE).startOf('day');
+        const threeWeeksFromNow = now.add(3, 'week');
 
         const res = await this.calendarClient.events.list({
             calendarId: process.env.GOOGLE_CALENDAR_ID,
@@ -109,7 +115,14 @@ export class GoogleInstance {
         events
             .filter((event) => event.status !== 'cancelled')
             .reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
-                const eventDate = dayjs(event.start?.dateTime || event.start?.date);
+                const start = event.start?.dateTime || event.start?.date;
+                if (!start) {
+                    return acc;
+                }
+
+                const eventDate = event.start?.dateTime
+                    ? dayjs(start).tz(MOSCOW_TIMEZONE)
+                    : dayjs.tz(start, MOSCOW_TIMEZONE);
                 const formattedDate = eventDate.format('DD.MM.YYYY');
                 const name = extractName(event.summary || '');
                 const transformedEvent = { summary: name, date: formattedDate };
