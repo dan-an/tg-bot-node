@@ -5,8 +5,14 @@ import { calendar, calendar_v3 } from '@googleapis/calendar';
 import { EventsMap } from '@/types';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 
 dayjs.extend(customParseFormat);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+const MOSCOW_TIMEZONE = 'Europe/Moscow';
 
 config();
 
@@ -85,8 +91,8 @@ export class GoogleInstance {
             inThreeWeeks: [],
         };
 
-        const now = dayjs().startOf('day');
-        const threeWeeksFromNow = dayjs().add(3, 'week');
+        const now = dayjs().tz(MOSCOW_TIMEZONE).startOf('day');
+        const threeWeeksFromNow = now.add(3, 'week');
 
         const res = await this.calendarClient.events.list({
             calendarId: process.env.GOOGLE_CALENDAR_ID,
@@ -100,31 +106,34 @@ export class GoogleInstance {
         };
 
         const events = res.data.items || [];
-        const tomorrow = now.add(1, 'day');
-        const inThreeDays = now.add(3, 'day');
-        const inOneWeek = now.add(1, 'week');
-        const inTwoWeeks = now.add(2, 'week');
-        const inThreeWeeks = now.add(3, 'week');
-
         events
             .filter((event) => event.status !== 'cancelled')
             .reduce((acc: EventsMap, event: calendar_v3.Schema$Event) => {
-                const eventDate = dayjs(event.start?.dateTime || event.start?.date);
-                const formattedDate = eventDate.format('DD.MM.YYYY');
+                const start = event.start?.dateTime || event.start?.date;
+                if (!start) {
+                    return acc;
+                }
+
+                const eventDate = event.start?.dateTime
+                    ? dayjs(start).tz(MOSCOW_TIMEZONE)
+                    : dayjs.tz(start, MOSCOW_TIMEZONE);
+                const eventDay = eventDate.startOf('day');
+                const dayDiff = eventDay.diff(now, 'day');
+                const formattedDate = eventDay.format('DD.MM.YYYY');
                 const name = extractName(event.summary || '');
                 const transformedEvent = { summary: name, date: formattedDate };
 
-                if (eventDate.isSame(now, 'day')) {
+                if (dayDiff === 0) {
                     acc.today.push(transformedEvent);
-                } else if (eventDate.isSame(tomorrow, 'day')) {
+                } else if (dayDiff === 1) {
                     acc.tomorrow.push(transformedEvent);
-                } else if (eventDate.isBefore(inThreeDays, 'day')) {
+                } else if (dayDiff >= 2 && dayDiff <= 3) {
                     acc.inThreeDays.push(transformedEvent);
-                } else if (eventDate.isBefore(inOneWeek, 'day')) {
+                } else if (dayDiff >= 4 && dayDiff <= 6) {
                     acc.inOneWeek.push(transformedEvent);
-                } else if (eventDate.isBefore(inTwoWeeks, 'day')) {
+                } else if (dayDiff >= 7 && dayDiff <= 13) {
                     acc.inTwoWeeks.push(transformedEvent);
-                } else if (eventDate.isBefore(inThreeWeeks, 'day')) {
+                } else if (dayDiff >= 14 && dayDiff <= 20) {
                     acc.inThreeWeeks.push(transformedEvent);
                 }
 
